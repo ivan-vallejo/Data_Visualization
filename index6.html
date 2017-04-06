@@ -148,6 +148,8 @@ var nest2 = d3.nest()
         .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
 
   cell.data(root1.leaves()).select("rect")
+      .transition()
+      .duration(1000)
       .attr("id", function(d) { return d.data.id; })
       .attr("width", function(d) { return d.x1 - d.x0; })
       .attr("height", function(d) { return d.y1 - d.y0; })
