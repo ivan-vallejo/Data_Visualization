@@ -1,0 +1,195 @@
+region,country,iso,data2010,data2015
+Africa,Angola,ao,19158141.52,20081534.88
+Africa,Benin,bj,9224504.06,10227038.32
+Africa,Botswana,bw,1851180.54,1501150.1
+Africa,Burkina Faso,bf,15229478.32,15944016.25
+Africa,Burundi,bi,9140425.47,10380114.24
+Africa,Cameroon,cm,19799369.28,18714503.2
+Africa,Cape Verde,cv,341320.7,289739.55
+Africa,Central African Rep.,cf,4262922.58,4610958.72
+Africa,Chad,td,11603573.19,13333512.5
+Africa,Congo (Dem. Rep.),cd,62191161,69108964.35
+Africa,Congo (Rep.),cg,3906129.25,4344162.06
+Africa,Côte d'Ivoire,ci,18597056.24,16823274.36
+Africa,Equatorial Guinea,gq,654396.98,631503.88
+Africa,Eritrea,er,5741159,6670257.66
+Africa,Ethiopia,et,87095281,88058470.78
+Africa,Gabon,ga,1447286.46,1348423.23
+Africa,Gambia,gm,1529382.4,1635167.23
+Africa,Ghana,gh,22564497.93,20777932.56
+Africa,Guinea,gn,10767272.67,11853855.36
+Africa,Guinea-Bissau,gw,1554891.52,1734159.21
+Africa,Kenya,ke,35181906.84,25711739.35
+Africa,Lesotho,ls,1948653.37,1780897.44
+Africa,Liberia,lr,3878830.2,4278267.05
+Africa,Madagascar,mg,20868736.68,23265974.4
+Africa,Malawi,mw,14713420.12,15750903.35
+Africa,Mali,ml,13706241.78,14632728.3
+Africa,Mauritius,mu,886074.48,626790.5
+Africa,Mozambique,mz,23008574.4,24680862.57
+Africa,Namibia,na,1939280.63,1866048.6
+Africa,Niger,ne,15893746,18883012.4
+Africa,Nigeria,ng,121377912.8,97267418.96
+Africa,Rwanda,rw,9969793.44,10190964.1
+Africa,S. Tomé & Principe,st,146146.96,152085.75
+Africa,Senegal,sn,11914518.88,11824282.34
+Africa,Seychelles,sc,53812.72,39376.68
+Africa,Sierra Leone,sl,5751976,6192203.5
+Africa,South Africa,za,39103787.52,26210753.17
+Africa,South Sudan,ss,9654432.3,10086426.43
+Africa,Swaziland,sz,1061901.72,899863.3
+Africa,Tanzania,tz,44073863.4,49676256.2
+Africa,Togo,tg,6116833.58,6668841.21
+Africa,Uganda,ug,29908747.44,32514422.22
+Africa,Zambia,zm,11895286.5,12260487.16
+Africa,Zimbabwe,zw,12292359.32,12638725.68
+Arab States,Algeria,dz,32615281.6,25192747.68
+Arab States,Bahrain,bh,563180.85,95180.82
+Arab States,Comoros,km,648926.95,716153.94
+Arab States,Djibouti,dj,783993.84,800695.62
+Arab States,Egypt,eg,61679806.95,55058692.65
+Arab States,Iraq,iq,30343132.4,29686362.66
+Arab States,Jordan,jo,4711824.42,3614187.2
+Arab States,Kuwait,kw,1166716.2,645011.82
+Arab States,Lebanon,lb,2474422.44,1313942.24
+Arab States,Libya,ly,5194926.32,5116834.8
+Arab States,Mauritania,mr,3465043.2,3468190.4
+Arab States,Morocco,ma,15188332.8,14600717.51
+Arab States,Oman,om,1821799.2,1081023.58
+Arab States,Qatar,qa,542411.03,188043.92
+Arab States,Saudi Arabia,sa,16082448.33,9268299.71
+Arab States,Somalia,so,9636173,11011483.89
+Arab States,Sudan,sd,36583630.44,29313780.58
+Arab States,Syria,sy,17226117.6,15808147.16
+Arab States,Tunisia,tn,6804371.2,5842328.96
+Arab States,United Arab Emirates,ae,2701291.84,861941.52
+Arab States,Yemen,ye,20031447.04,19151314.5
+Asia & Pacific,Afghanistan,af,27261899.52,29446244.96
+Asia & Pacific,Australia,au,5377077.12,3827696.16
+Asia & Pacific,Bangladesh,bd,146591710.8,137953674.1
+Asia & Pacific,Bhutan,bt,623736.93,473641.21
+Asia & Pacific,Brunei Darussalam,bn,188267.43,124276.31
+Asia & Pacific,Cambodia,kh,14221281.69,12698417.79
+Asia & Pacific,China,cn,897482166.9,700793304.5
+Asia & Pacific,D.P.R. Korea,kp,24500520,25155326
+Asia & Pacific,Fiji,fj,688447.2,482072.58
+Asia & Pacific,"Hong Kong, China",hk,1973863.92,1170169.12
+Asia & Pacific,India,in,1121230923,948968824.2
+Asia & Pacific,Indonesia,id,216608836.5,202009940.2
+Asia & Pacific,Iran (I.R.),ir,63292966.9,44506732.48
+Asia & Pacific,Japan,jp,28017623.26,8877261.33
+Asia & Pacific,Kiribati,ki,88946.13,92888.4
+Asia & Pacific,Korea (Rep.),kr,8237168.27,5472525.74
+Asia & Pacific,Lao P.D.R.,la,5948013.09,5756114.64
+Asia & Pacific,"Macao, China",mo,240581.7,134416.6
+Asia & Pacific,Malaysia,my,12441367.4,8888841.04
+Asia & Pacific,Maldives,mv,241013.56,164671.26
+Asia & Pacific,Marshall Islands,mh,48758.04,42924.33
+Asia & Pacific,Micronesia,fm,82895.2,72077.4
+Asia & Pacific,Mongolia,mn,2441464.2,2309209.5
+Asia & Pacific,Myanmar,mm,51931231,42789766.98
+Asia & Pacific,Nauru,nr,10025,10122
+Asia & Pacific,Nepal,np,24966794.88,23605722.07
+Asia & Pacific,New Zealand,nz,873627.2,551567.52
+Asia & Pacific,Pakistan,pk,159297361.5,154278112.8
+Asia & Pacific,Papua New Guinea,pg,6790355.55,7097591.67
+Asia & Pacific,Philippines,ph,70083241.5,61081623.6
+Asia & Pacific,Samoa,ws,173006.97,144921
+Asia & Pacific,Singapore,sg,1472901.01,1011395.88
+Asia & Pacific,Solomon Islands,sb,500124.65,526033.8
+Asia & Pacific,Sri Lanka,lk,18267725.52,15344407.82
+Asia & Pacific,Thailand,th,51793806.48,41114455.06
+Asia & Pacific,Timor-Leste,tp,1079450,1020221.16
+Asia & Pacific,Tonga,to,87442.32,59572.24
+Asia & Pacific,Tuvalu,tv,7370.25,5751.28
+Asia & Pacific,Vanuatu,vu,217395.08,205832.64
+Asia & Pacific,Viet Nam,vn,62333177.9,44825582.4
+CIS,Armenia,am,2222622,1255576.14
+CIS,Azerbaijan,az,4911147.72,2210893.4
+CIS,Belarus,by,6548838.3,3518673.08
+CIS,Georgia,ge,3247618.76,2367497
+CIS,Kazakhstan,kz,10985577.63,4695725.16
+CIS,Kyrgyzstan,kg,4480747.32,3995270.3
+CIS,Moldova,md,2429656.32,1752782.28
+CIS,Russian Federation,ru,81862210.41,38366498.07
+CIS,Tajikistan,tj,6788320.14,7060514.88
+CIS,Turkmenistan,tm,4890735.15,4621198.82
+CIS,Ukraine,ua,35458669.4,21501564.81
+CIS,Uzbekistan,uz,23603879.5,17231760.56
+Europe,Albania,al,1732578.65,1182882.97
+Europe,Andorra,ad,14802.33,3238
+Europe,Austria,at,2100481,1454819.37
+Europe,Belgium,be,2735322,1677511.65
+Europe,Bosnia and Herzegovina,ba,2230638.82,1336889.4
+Europe,Bulgaria,bg,3990154.5,3129562.04
+Europe,Croatia,hr,1908731.88,1319165.94
+Europe,Cyprus,cy,529768.8,337761.55
+Europe,Czech Republic,cz,3377184.32,2047641.4
+Europe,Denmark,dk,666115.08,226468.92
+Europe,Estonia,ee,337618.58,153627.24
+Europe,Finland,fi,751477.02,436847.36
+Europe,France,fr,14543099.18,10397263.04
+Europe,Germany,de,14943132.72,10733060.52
+Europe,Greece,gr,6221599.44,3782783.22
+Europe,Hungary,hu,3505121.55,2775190.88
+Europe,Iceland,is,22262.94,6734.56
+Europe,Ireland,ie,1384943.91,945371.2
+Europe,Israel,il,2448721.44,1742296.16
+Europe,Italy,it,28439219.66,21399777.35
+Europe,Latvia,lv,668966.08,426585.81
+Europe,Liechtenstein,li,7224,1498.44
+Europe,Lithuania,lt,1166013.66,869701.01
+Europe,Luxembourg,lu,50788.5,16297.83
+Europe,Malta,mt,157153.06,103497.36
+Europe,Monaco,mc,9211.25,2682.4
+Europe,Montenegro,me,390649.14,223760.16
+Europe,Netherlands,nl,1661524.3,1179093.65
+Europe,Norway,no,342387.57,205713.68
+Europe,Poland,pl,14515526.52,12613122.72
+Europe,Portugal,pt,4977202.24,3395204.48
+Europe,Romania,ro,13335500.36,9710640.45
+Europe,San Marino,sm,30861,31802
+Europe,Serbia,rs,4747942.2,2658879.65
+Europe,Slovakia,sk,1358359.25,818683.35
+Europe,Slovenia,si,616269.6,561352.95
+Europe,Spain,es,16163713.3,10383795.18
+Europe,Sweden,se,938229.7,969388.3
+Europe,Switzerland,ch,1331190.78,1071019.3
+Europe,TFYR Macedonia,mk,1030085.84,632775.3
+Europe,Turkey,tr,44003903.06,36044539.23
+Europe,United Kingdom,uk,9309952.5,5107508.48
+The Americas,Antigua & Barbuda,ag,46233.49,32137.7
+The Americas,Argentina,ar,22205823.2,13068023.34
+The Americas,Bahamas,bs,205483.86,85260.78
+The Americas,Barbados,bb,98138.6,68995.68
+The Americas,Belize,bz,222188.4,205082.82
+The Americas,Bolivia,bo,7922148.78,6063487.1
+The Americas,Brazil,br,117126092.4,83499456.1
+The Americas,Canada,ca,6825248,4304553.96
+The Americas,Chile,cl,9432918,6452662.32
+The Americas,Colombia,co,29724670.72,22288143.6
+The Americas,Costa Rica,cr,2988598.4,2050679.37
+The Americas,Cuba,cu,9589502.8,7761660.27
+The Americas,Dominica,dm,37718.51,23984.4
+The Americas,Dominican Rep.,do,6911589.93,5219546.15
+The Americas,Ecuador,ec,10650761.12,8437359.32
+The Americas,El Salvador,sv,5285465.75,4755241.48
+The Americas,Grenada,gd,76414.21,50146.18
+The Americas,Guatemala,gt,12907418.4,11866218.62
+The Americas,Guyana,gy,558149.46,500718.82
+The Americas,Haiti,ht,9104688,9331283.28
+The Americas,Honduras,hn,6782871.56,6739133.6
+The Americas,Jamaica,jm,2001284.05,1603567.32
+The Americas,Mexico,mx,81341618.76,53851302.41
+The Americas,Nicaragua,ni,5239988.1,5067773.1
+The Americas,Panama,pa,2206876.8,1954054.34
+The Americas,Paraguay,py,5232374.01,3938447.52
+The Americas,Peru,pe,19313467.8,18696700.2
+The Americas,St. Kitts and Nevis,kn,19370.24,13844
+The Americas,St. Lucia,lc,101116.29,88769.76
+The Americas,St. Vincent and the Grenadines,vc,73241.72,53593.26
+The Americas,Suriname,sr,362222.4,318104.48
+The Americas,Trinidad & Tobago,tt,690609.4,417476.07
+The Americas,United States,us,90551663.64,84533184.84
+The Americas,Uruguay,uy,1820870.28,1234798.92
+The Americas,Venezuela,ve,18297268.29,12204153.78
