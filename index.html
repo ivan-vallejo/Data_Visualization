@@ -9,6 +9,22 @@ svg {
   font: 10px sans-serif;
 }
 
+div.tooltip {
+  position: absolute;
+  width: 130px;
+  height: auto;
+  padding: 10px;
+  background-color: white;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+  -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  }
+
+
 .node-label {
   /*font: 15px sans-serif;*/
 }
@@ -25,9 +41,8 @@ svg {
   </div>
   <br>
   <div id=chart>
-  <svg width="670" height="500"></svg>
+  <svg width="800" height="500"></svg>
   </div>
-
 </body>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
@@ -37,7 +52,8 @@ var svg = d3.select("svg"),
     height = +svg.attr("height"),
     data,
     root1,
-    root2;
+    root2
+    duration_tips=700;
 
 var fader = function(color) { return d3.interpolateRgb(color, "#fff")(0.2); },
     color = d3.scaleOrdinal(d3.schemeCategory20.map(fader)),
@@ -50,6 +66,19 @@ var treemap = d3.treemap()
     .size([width, height])
     .round(true)
     .paddingInner(1);
+
+var div = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+/*
+var tooltip = d3.select("body")
+    .append("div")
+    .attr("class", "node-tooltip")
+    .style("visibility", "hidden")
+    .text("a simple tooltip");
+*/
+
 
 var nest1 = d3.nest()
     .key(function(d) { return d.region; })
@@ -93,7 +122,29 @@ var nest2 = d3.nest()
       .attr("id", function(d) { return d.data.id; })
       .attr("width", function(d) { return d.x1 - d.x0; })
       .attr("height", function(d) { return d.y1 - d.y0; })
-      .attr("fill", function(d) { return color(d.parent.parent.data.key); });
+      .attr("fill", function(d) { return color(d.parent.parent.data.key); })
+      .on("mouseover", function(d) {
+            div.transition();
+            div.style("opacity", 0);
+        })
+      .on("mousemove", function(d) {
+            div.transition();
+            div.style("opacity",0)
+            .style("left", (d3.event.pageX+10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px")
+            .html(d.data.key + "<br>"+ "("+ d.parent.parent.data.key +")" + "<br/>"  + String(format(d.value/1000000))+"M non-users");
+            console.log(d)
+            div.transition()
+                .delay(1000)
+                .duration(duration_tips)
+                .style("opacity", .9);
+
+            })
+
+      .on("mouseout", function(d) {
+            div.transition();
+            div.style("opacity", 0);
+        });
 
   cell.append("text")
         .attr("class", "node-label")
@@ -101,7 +152,24 @@ var nest2 = d3.nest()
         .attr("y", function(d) { return d.dy; })
         .attr("dy", y_padding + "px")
         .attr("dx", x_padding + "px")
-        .call(fit_text,1);
+        .call(fit_text,1)
+        .on("mouseover", function(d) {
+              div.style("opacity", 0);
+          })
+        .on("mousemove", function(d) {
+              div.style("opacity",0)
+              .style("left", (d3.event.pageX+10) + "px")
+              .style("top", (d3.event.pageY - 10) + "px")
+              .html(d.data.key + "<br>"+ "("+ d.parent.parent.data.key +")"+"<br/>"  + String(format(d.value/1000000))+"M non-users");
+
+              div.transition()
+                  .delay(1000)
+                  .duration(duration_tips)
+                  .style("opacity", .9);
+              })
+        .on("mouseout", function(d) {
+              div.style("opacity", 0);
+          });
 
   cell.append("text")
         .attr("class", "node-value")
@@ -109,7 +177,24 @@ var nest2 = d3.nest()
         .attr("y", function(d) { return d.dy; })
         .attr("dy", 2*y_padding + "px")
         .attr("dx", x_padding + "px")
-        .call(fit_value,1);
+        .call(fit_value,1)
+        .on("mouseover", function(d) {
+              div.style("opacity", 0);
+          })
+        .on("mousemove", function(d) {
+              div.style("opacity",0)
+              .style("left", (d3.event.pageX+10) + "px")
+              .style("top", (d3.event.pageY - 10) + "px")
+              .html(d.data.key + "<br>"+ "("+ d.parent.parent.data.key +")"+"<br/>"  + String(format(d.value/1000000))+"M non-users");
+
+              div.transition()
+                  .delay(1000)
+                  .duration(duration_tips)
+                  .style("opacity", .9);
+              })
+        .on("mouseout", function(d) {
+              div.style("opacity", 0);
+          });
 
   d3.select("#d2015").on("click", function() {
 
@@ -189,6 +274,11 @@ var nest2 = d3.nest()
 
   });
 });
+
+function delayed_tooltip(){
+
+
+}
 
 function fit_text(selection,scale){
 
