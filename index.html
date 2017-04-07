@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<style>
+
+form {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+svg {
+  font: 10px sans-serif;
+}
+
+.node-label {
+  font: 15px sans-serif;
+}
+.node-value {
+  font-weight: bold;
+}
+
+</style>
+<body>
+  <h1> Non-Internet users by region and country, 2010-2015 </h1>
+  <div id="option">
+    <button class="first active" id="d2010"> 2010 </button>
+    <button class="last" id="d2015"> 2015 </button>
+  </div>
+  <br>
+  <div id=chart>
+  <svg width="670" height="500"></svg>
+  </div>
+
+</body>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+var svg = d3.select("svg"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height"),
+    data,
+    root1,
+    root2;
+
+var fader = function(color) { return d3.interpolateRgb(color, "#fff")(0.2); },
+    color = d3.scaleOrdinal(d3.schemeCategory20.map(fader)),
+    format = d3.format(",d")
+    x_padding = 2
+    y_padding = 15;
+
+var treemap = d3.treemap()
+    .tile(d3.treemapResquarify)
+    .size([width, height])
+    .round(true)
+    .paddingInner(1);
+
+var nest1 = d3.nest()
+    .key(function(d) { return d.region; })
+    .key(function(d) { return d.iso; })
+    .key(function(d) { return d.country; })
+    .rollup(function(d) { return d3.sum(d, function(d) { return parseFloat(d.data2010); }); });
+
+var nest2 = d3.nest()
+    .key(function(d) { return d.region; })
+    .key(function(d) { return d.iso; })
+    .key(function(d) { return d.country; })
+    .rollup(function(d) { return d3.sum(d, function(d) { return parseFloat(d.data2015); }); });
+
+
+    d3.csv("Non_Int_users.csv", function(error, csv_data) {
+      if (error) throw error;
+
+      data = csv_data;
+
+      var root1 = d3.hierarchy({values: nest1.entries(data)}, function(d) { return d.values; })
+          .sum(function(d) { return d.value; })
+          .sort(function(a, b) { return b.value - a.value; });
+
+      var root2 = d3.hierarchy({values: nest2.entries(data)}, function(d) { return d.values; })
+          .sum(function(d) { return d.value; })
+          .sort(function(a, b) { return b.value - a.value; });
+
+  treemap(root1);
+  treemap(root2);
+
+  var ratio = Math.sqrt(accumulate(root1)/accumulate(root2))
+
+  console.log(ratio)
+
+  var cell = svg.selectAll("g")
+    .data(root1.leaves())
+    .enter().append("g")
+      .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
+
+  cell.append("rect")
+      .attr("id", function(d) { return d.data.id; })
+      .attr("width", function(d) { return d.x1 - d.x0; })
+      .attr("height", function(d) { return d.y1 - d.y0; })
+      .attr("fill", function(d) { return color(d.parent.parent.data.key); });
+
+  cell.append("text")
+        .attr("class", "node-label")
+        .attr("x", function(d) { return d.dx; })
+        .attr("y", function(d) { return d.dy; })
+        .attr("dy", y_padding + "px")
+        .attr("dx", x_padding + "px")
+        .call(fit_text,1);
+
+  d3.select("#d2015").on("click", function() {
+
+  //svg.selectAll("rect").remove()
+  svg.selectAll("text").remove()
+
+
+  cell.data(root2.leaves())
+        .transition()
+        .duration(1000)
+        .attr("transform", function(d) { return "translate(" + d.x0/ratio + "," + d.y0/ratio + ")"; });
+
+  cell.data(root2.leaves()).select("rect")
+      .transition()
+      .duration(1000)
+      .attr("id", function(d) { return d.data.id; })
+      .attr("width", function(d) { return (d.x1 - d.x0)/ratio; })
+      .attr("height", function(d) { return (d.y1 - d.y0)/ratio; })
+      .attr("stroke","white")
+      .attr("stroke-width","0.5")
+      .attr("fill", function(d) { return color(d.parent.parent.data.key); });
+
+  cell.append("text")
+        .attr("class", "node-label")
+        .attr("x", function(d) { return d.dx/ratio; })
+        .attr("y", function(d) { return d.dy/ratio; })
+        .attr("dy", "15px")
+        .attr("dx", "2px")
+        .call(fit_text,1);
+
+  });
+
+  d3.select("#d2010").on("click", function() {
+
+  //svg.selectAll("rect").remove()
+  svg.selectAll("text").remove()
+
+  cell.data(root1.leaves())
+        .transition()
+        .duration(1000)
+        .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
+
+  cell.data(root1.leaves()).select("rect")
+      .transition()
+      .duration(1000)
+      .attr("id", function(d) { return d.data.id; })
+      .attr("width", function(d) { return d.x1 - d.x0; })
+      .attr("height", function(d) { return d.y1 - d.y0; })
+      .attr("stroke","white")
+      .attr("stroke-width","0.5")
+      .attr("fill", function(d) { return color(d.parent.parent.data.key); });
+
+  cell.append("text")
+        .attr("class", "node-label")
+        .attr("id", function(d) { return d.data.id; })
+        .attr("x", function(d) { return d.dx; })
+        .attr("y", function(d) { return d.dy; })
+        .attr("dy", "15px")
+        .attr("dx", "2px")
+        .text(function(d) { return (getTextWidth(d.parent.data.key,15,"sans-serif") < ((d.x1 - d.x0)-x_padding)) && (getTextWidth("l",15,"sans-serif") < ((d.y1 - d.y0)-y_padding)) ? d.parent.data.key : ""; });
+
+  });
+});
+
+function fit_text(selection,scale){
+
+  selection
+    .text( function(d){
+
+      if((getTextWidth(d.data.key,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"sans-serif") < (((d.y1 - d.y0)-y_padding)/scale))) {
+
+        return(d.data.key)
+
+      }else if((getTextWidth(d.parent.data.key,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"sans-serif") < (((d.y1 - d.y0)-y_padding)/scale))){
+
+        return(d.parent.data.key)
+
+      }
+
+
+    }
+
+  );
+
+}
+
+function accumulate(d) {
+  return d.children
+  ? d.value = d.children.reduce(function(p, v) { return p + accumulate(v); }, 0)
+  : d.value;
+  }
+
+function getTextWidth(text, fontSize, fontFace) {
+    var a = document.createElement('canvas');
+    var b = a.getContext('2d');
+    b.font = fontSize + 'px ' + fontFace;
+    return b.measureText(text).width;
+}
+
+function getTextHeigth(text, fontSize, fontFace) {
+    var a = document.createElement('canvas');
+    var b = a.getContext('2d');
+    b.font = fontSize + 'px ' + fontFace;
+    return b.measureText(text).heigth;
+}
+</script>
