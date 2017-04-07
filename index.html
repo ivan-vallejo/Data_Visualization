@@ -6,7 +6,7 @@ form {
 }
 
 svg {
-  font: 10px sans-serif;
+  font: 10px arial;
 }
 
 div.tooltip {
@@ -22,8 +22,12 @@ div.tooltip {
   -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
   box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
   pointer-events: none;
-  }
+}
+svg.legend{
 
+  font: 20px arial;
+
+}
 
 .node-label {
   /*font: 15px sans-serif;*/
@@ -32,28 +36,71 @@ div.tooltip {
   font-weight: normal;
 }
 
+.btn-group .button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    float: left;
+}
+
+.btn-group .button:hover {
+    background-color: #3e8e41;
+}
+
+.btn-group .buttonsel:hover {
+    background-color: #3e8e41;
+}
+
+.btn-group .buttonsel {
+  background-color: #4CAF55; /* Green */
+  border: 5px solid black;
+  color: white;
+  padding: 10px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+  float: left;
+}
+
+
 </style>
 <body>
   <h1> Non-Internet users by region and country, 2010-2015 </h1>
-  <div id="option">
-    <button class="first active" id="d2010"> 2010 </button>
-    <button class="last" id="d2015"> 2015 </button>
-  </div>
-  <br>
-  <div id=chart>
-  <svg width="800" height="500"></svg>
-  </div>
+
+<div class="btn-group">
+  <button class="buttonsel" id="d2010" >2010</button>
+  <button class="button" id="d2015">2015</button>
+</div>
+
+
+<br style="clear:both">
+
+<br>
+
 </body>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
 
-var svg = d3.select("svg"),
-    width = +svg.attr("width"),
-    height = +svg.attr("height"),
+var margin = {top: 30, right: 20, bottom: 30, left: 50},
+    width = 800,
+    height = 500,
     data,
     root1,
     root2
     duration_tips=700;
+
+var svg = d3.select("body")
+	  .append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
 
 var fader = function(color) { return d3.interpolateRgb(color, "#fff")(0.2); },
     color = d3.scaleOrdinal(d3.schemeCategory20.map(fader)),
@@ -70,15 +117,6 @@ var treemap = d3.treemap()
 var div = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
-
-/*
-var tooltip = d3.select("body")
-    .append("div")
-    .attr("class", "node-tooltip")
-    .style("visibility", "hidden")
-    .text("a simple tooltip");
-*/
-
 
 var nest1 = d3.nest()
     .key(function(d) { return d.region; })
@@ -133,7 +171,7 @@ var nest2 = d3.nest()
             .style("left", (d3.event.pageX+10) + "px")
             .style("top", (d3.event.pageY - 10) + "px")
             .html(d.data.key + "<br>"+ "("+ d.parent.parent.data.key +")" + "<br/>"  + String(format(d.value/1000000))+"M non-users");
-            console.log(d)
+
             div.transition()
                 .delay(1000)
                 .duration(duration_tips)
@@ -196,16 +234,37 @@ var nest2 = d3.nest()
               div.style("opacity", 0);
           });
 
+// Add legend according to selected colors
+    d3.select("body")
+    	.append("svg")
+        .attr("class","legend")
+    		.attr("width", "200")
+    		.attr("height", height);
+
+    legend = d3.select("svg.legend");
+
+    legend
+      .call(draw_legend,1,"blue","Asia-Pacific")
+      .call(draw_legend,2,"gray","Africa")
+      .call(draw_legend,3,"orange","The Americas")
+      .call(draw_legend,4,"lightblue","Arab States")
+      .call(draw_legend,5,"lightgreen","CIS")
+      .call(draw_legend,6,"green","Europe");
+// Legend drawn
+
+
   d3.select("#d2015").on("click", function() {
 
-  //svg.selectAll("rect").remove()
-  svg.selectAll("text").remove()
+  svg.selectAll("text").remove();
 
+  d3.select("#d2015").attr("class","btn-group buttonsel");
+  d3.select("#d2010").attr("class","btn-group button");
 
   cell.data(root2.leaves())
         .transition()
         .duration(1000)
         .attr("transform", function(d) { return "translate(" + d.x0/ratio + "," + d.y0/ratio + ")"; });
+
 
   cell.data(root2.leaves()).select("rect")
       .transition()
@@ -217,21 +276,18 @@ var nest2 = d3.nest()
       .attr("stroke-width","0.5")
       .attr("fill", function(d) { return color(d.parent.parent.data.key); });
 
+
   cell.append("text")
         .attr("class", "node-label")
-        .attr("x", function(d) { return d.dx/ratio; })
-        .attr("y", function(d) { return d.dy/ratio; })
         .attr("dy", y_padding + "px")
         .attr("dx", x_padding + "px")
         .call(fit_text,ratio);
 
   cell.append("text")
         .attr("class", "node-value")
-        .attr("x", function(d) { return d.dx; })
-        .attr("y", function(d) { return d.dy; })
         .attr("dy", 2*y_padding + "px")
         .attr("dx", x_padding + "px")
-        .call(fit_value,1);
+        .call(fit_value,ratio);
 
   });
 
@@ -239,6 +295,10 @@ var nest2 = d3.nest()
 
   //svg.selectAll("rect").remove()
   svg.selectAll("text").remove()
+
+  d3.select("#d2015").attr("class","btn-group button");
+  d3.select("#d2010").attr("class","btn-group buttonsel");
+
 
   cell.data(root1.leaves())
         .transition()
@@ -275,11 +335,21 @@ var nest2 = d3.nest()
   });
 });
 
-function delayed_tooltip(){
-
+function draw_legend(selection, pos,color,text){
+      selection
+          .append('rect')
+            .attr("width", "20")
+            .attr("height", "20")
+            .attr("y",function(d){return 50*(pos-1)})
+            .attr("fill", color);
+      selection
+          .append("text")
+          .attr("y",function(d){return 50*(pos-1)})
+          .attr("dy", y_padding + "px")
+          .attr("dx", 15*x_padding + "px")
+          .text(text);
 
 }
-
 function fit_text(selection,scale){
 
   selection
@@ -327,7 +397,6 @@ function fit_value(selection,scale){
     .text( function(d){
 
       var text = String(format(d.value/1000000))+"M"
-      //console.log(text)
 
       if((getTextWidth(text,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("a",15,"sans-serif") < (((d.y1 - d.y0)-1.7*y_padding)/scale))) {
 
