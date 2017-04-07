@@ -10,10 +10,10 @@ svg {
 }
 
 .node-label {
-  font: 15px sans-serif;
+  /*font: 15px sans-serif;*/
 }
 .node-value {
-  font-weight: bold;
+  font-weight: normal;
 }
 
 </style>
@@ -41,7 +41,7 @@ var svg = d3.select("svg"),
 
 var fader = function(color) { return d3.interpolateRgb(color, "#fff")(0.2); },
     color = d3.scaleOrdinal(d3.schemeCategory20.map(fader)),
-    format = d3.format(",d")
+    format = d3.format(",.2r")
     x_padding = 2
     y_padding = 15;
 
@@ -82,7 +82,7 @@ var nest2 = d3.nest()
 
   var ratio = Math.sqrt(accumulate(root1)/accumulate(root2))
 
-  console.log(ratio)
+  //console.log(ratio)
 
   var cell = svg.selectAll("g")
     .data(root1.leaves())
@@ -102,6 +102,14 @@ var nest2 = d3.nest()
         .attr("dy", y_padding + "px")
         .attr("dx", x_padding + "px")
         .call(fit_text,1);
+
+  cell.append("text")
+        .attr("class", "node-value")
+        .attr("x", function(d) { return d.dx; })
+        .attr("y", function(d) { return d.dy; })
+        .attr("dy", 2*y_padding + "px")
+        .attr("dx", x_padding + "px")
+        .call(fit_value,1);
 
   d3.select("#d2015").on("click", function() {
 
@@ -128,9 +136,17 @@ var nest2 = d3.nest()
         .attr("class", "node-label")
         .attr("x", function(d) { return d.dx/ratio; })
         .attr("y", function(d) { return d.dy/ratio; })
-        .attr("dy", "15px")
-        .attr("dx", "2px")
-        .call(fit_text,1);
+        .attr("dy", y_padding + "px")
+        .attr("dx", x_padding + "px")
+        .call(fit_text,ratio);
+
+  cell.append("text")
+        .attr("class", "node-value")
+        .attr("x", function(d) { return d.dx; })
+        .attr("y", function(d) { return d.dy; })
+        .attr("dy", 2*y_padding + "px")
+        .attr("dx", x_padding + "px")
+        .call(fit_value,1);
 
   });
 
@@ -159,9 +175,17 @@ var nest2 = d3.nest()
         .attr("id", function(d) { return d.data.id; })
         .attr("x", function(d) { return d.dx; })
         .attr("y", function(d) { return d.dy; })
-        .attr("dy", "15px")
-        .attr("dx", "2px")
-        .text(function(d) { return (getTextWidth(d.parent.data.key,15,"sans-serif") < ((d.x1 - d.x0)-x_padding)) && (getTextWidth("l",15,"sans-serif") < ((d.y1 - d.y0)-y_padding)) ? d.parent.data.key : ""; });
+        .attr("dy", y_padding + "px")
+        .attr("dx", x_padding + "px")
+        .call(fit_text,1);
+
+  cell.append("text")
+        .attr("class", "node-value")
+        .attr("x", function(d) { return d.dx; })
+        .attr("y", function(d) { return d.dy; })
+        .attr("dy", 2*y_padding + "px")
+        .attr("dx", x_padding + "px")
+        .call(fit_value,1);
 
   });
 });
@@ -171,20 +195,56 @@ function fit_text(selection,scale){
   selection
     .text( function(d){
 
-      if((getTextWidth(d.data.key,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"sans-serif") < (((d.y1 - d.y0)-y_padding)/scale))) {
+      var iso = String(d.parent.data.key).toUpperCase()
+      var fullname = String(d.data.key)
 
-        return(d.data.key)
+      if((getTextWidth(fullname,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"sans-serif") < (((d.y1 - d.y0)-y_padding)/scale))) {
 
-      }else if((getTextWidth(d.parent.data.key,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"sans-serif") < (((d.y1 - d.y0)-y_padding)/scale))){
+        return(fullname)
 
-        return(d.parent.data.key)
+      }else if((getTextWidth(iso,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"sans-serif") < (((d.y1 - d.y0)-y_padding)/scale))){
+
+        //console.log(String(d.parent.data.key).toUpperCase())
+        return(iso)
+
+      }else if((getTextWidth(iso,9,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",9,"sans-serif") < (((d.y1 - d.y0)-y_padding)/scale))){
+
+        return(iso)
 
       }
 
+    })
 
-    }
+    .attr("font-size",function(d){
 
-  );
+      var iso = String(d.parent.data.key).toUpperCase()
+
+        if((getTextWidth(iso,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"sans-serif") < (((d.y1 - d.y0)-y_padding)/scale))){
+
+          return("15px")
+        }  else{
+          return("9px")
+        }
+
+      });
+
+
+}
+
+function fit_value(selection,scale){
+
+  selection
+    .text( function(d){
+
+      var text = String(format(d.value/1000000))+"M"
+      //console.log(text)
+
+      if((getTextWidth(text,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("a",15,"sans-serif") < (((d.y1 - d.y0)-1.7*y_padding)/scale))) {
+
+        return(text)
+
+      }
+    })
 
 }
 
