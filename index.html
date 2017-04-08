@@ -102,6 +102,10 @@ var svg = d3.select("body")
 		.attr("width", width + margin.left + margin.right)
 		.attr("height", height + margin.top + margin.bottom)
 
+var color2 = d3.scaleOrdinal()
+      .domain(["New York", "San Francisco", "Austin"])
+      .range(["#FF0000", "#009933" , "#0000FF"]);
+
 var fader = function(color) { return d3.interpolateRgb(color, "#fff")(0.2); },
     color = d3.scaleOrdinal(d3.schemeCategory20.map(fader)),
     format = d3.format(",.2r")
@@ -157,7 +161,7 @@ var nest2 = d3.nest()
       .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
 
   cell.append("rect")
-      .attr("id", function(d) { return d.data.id; })
+      .attr("id", function(d) { return d.parent.data.key; })
       .attr("width", function(d) { return d.x1 - d.x0; })
       .attr("height", function(d) { return d.y1 - d.y0; })
       .attr("fill", function(d) { return color(d.parent.parent.data.key); })
@@ -255,21 +259,20 @@ var nest2 = d3.nest()
 
   d3.select("#d2015").on("click", function() {
 
-  svg.selectAll("text").remove();
+  //svg.selectAll("text").remove();
 
   d3.select("#d2015").attr("class","btn-group buttonsel");
   d3.select("#d2010").attr("class","btn-group button");
 
-  cell.data(root2.leaves())
+  cell.data(root2.leaves(),function(d){return d.parent.data.key})
         .transition()
         .duration(1000)
         .attr("transform", function(d) { return "translate(" + d.x0/ratio + "," + d.y0/ratio + ")"; });
 
 
-  cell.data(root2.leaves()).select("rect")
+  cell.data(root2.leaves(),function(d){return d.parent.data.key}).select("rect")
       .transition()
       .duration(1000)
-      .attr("id", function(d) { return d.data.id; })
       .attr("width", function(d) { return (d.x1 - d.x0)/ratio; })
       .attr("height", function(d) { return (d.y1 - d.y0)/ratio; })
       .attr("stroke","white")
@@ -277,14 +280,20 @@ var nest2 = d3.nest()
       .attr("fill", function(d) { return color(d.parent.parent.data.key); });
 
 
-  cell.append("text")
-        .attr("class", "node-label")
+  cell.data(root2.leaves(),function(d){return d.parent.data.key}).select(".node-label")
+        .transition()
+        .duration(1000)
+        .attr("x", function(d) { return d.dx; })
+        .attr("y", function(d) { return d.dy; })
         .attr("dy", y_padding + "px")
         .attr("dx", x_padding + "px")
         .call(fit_text,ratio);
 
-  cell.append("text")
-        .attr("class", "node-value")
+  cell.data(root2.leaves(),function(d){return d.parent.data.key}).select(".node-value")
+        .transition()
+        .duration(1000)
+        .attr("x", function(d) { return d.dx; })
+        .attr("y", function(d) { return d.dy; })
         .attr("dy", 2*y_padding + "px")
         .attr("dx", x_padding + "px")
         .call(fit_value,ratio);
@@ -294,7 +303,7 @@ var nest2 = d3.nest()
   d3.select("#d2010").on("click", function() {
 
   //svg.selectAll("rect").remove()
-  svg.selectAll("text").remove()
+  //svg.selectAll("text").remove()
 
   d3.select("#d2015").attr("class","btn-group button");
   d3.select("#d2010").attr("class","btn-group buttonsel");
@@ -308,24 +317,24 @@ var nest2 = d3.nest()
   cell.data(root1.leaves()).select("rect")
       .transition()
       .duration(1000)
-      .attr("id", function(d) { return d.data.id; })
       .attr("width", function(d) { return d.x1 - d.x0; })
       .attr("height", function(d) { return d.y1 - d.y0; })
       .attr("stroke","white")
       .attr("stroke-width","0.5")
       .attr("fill", function(d) { return color(d.parent.parent.data.key); });
 
-  cell.append("text")
-        .attr("class", "node-label")
-        .attr("id", function(d) { return d.data.id; })
+  cell.data(root1.leaves()).select(".node-label")
+        .transition()
+        .duration(1000)
         .attr("x", function(d) { return d.dx; })
         .attr("y", function(d) { return d.dy; })
         .attr("dy", y_padding + "px")
         .attr("dx", x_padding + "px")
         .call(fit_text,1);
 
-  cell.append("text")
-        .attr("class", "node-value")
+    cell.data(root1.leaves()).select(".node-value")
+        .transition()
+        .duration(1000)
         .attr("x", function(d) { return d.dx; })
         .attr("y", function(d) { return d.dy; })
         .attr("dy", 2*y_padding + "px")
@@ -358,28 +367,28 @@ function fit_text(selection,scale){
       var iso = String(d.parent.data.key).toUpperCase()
       var fullname = String(d.data.key)
 
-      if((getTextWidth(fullname,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"sans-serif") < (((d.y1 - d.y0)-y_padding)/scale))) {
+
+      if((getTextWidth(fullname,15,"arial") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"arial") < (((d.y1 - d.y0)-y_padding)/scale))) {
 
         return(fullname)
 
-      }else if((getTextWidth(iso,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"sans-serif") < (((d.y1 - d.y0)-y_padding)/scale))){
+      }else if((getTextWidth(iso,15,"arial") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"arial") < (((d.y1 - d.y0)-y_padding)/scale))){
 
-        //console.log(String(d.parent.data.key).toUpperCase())
+
         return(iso)
 
-      }else if((getTextWidth(iso,9,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",9,"sans-serif") < (((d.y1 - d.y0)-y_padding)/scale))){
+      }else if((getTextWidth(iso,9,"arial") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",9,"arial") < (((d.y1 - d.y0)-y_padding)/scale))){
 
         return(iso)
 
       }
-
     })
 
     .attr("font-size",function(d){
 
       var iso = String(d.parent.data.key).toUpperCase()
 
-        if((getTextWidth(iso,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"sans-serif") < (((d.y1 - d.y0)-y_padding)/scale))){
+        if((getTextWidth(iso,15,"arial") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"arial") < (((d.y1 - d.y0)-y_padding)/scale))){
 
           return("15px")
         }  else{
