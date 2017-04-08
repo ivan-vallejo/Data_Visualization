@@ -9,6 +9,10 @@ svg {
   font: 10px arial;
 }
 
+body {
+  font: 15px arial;
+}
+
 div.tooltip {
   position: absolute;
   width: 130px;
@@ -72,6 +76,9 @@ svg.legend{
 
 
 </style>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
 <body>
   <h1> Non-Internet users by region and country, 2010-2015 </h1>
 
@@ -79,35 +86,32 @@ svg.legend{
   <button class="buttonsel" id="d2010" >2010</button>
   <button class="button" id="d2015">2015</button>
 </div>
-
-
 <br style="clear:both">
-
 <br>
+<div class="chart">
+</div>
 
-</body>
-<script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
 
-var margin = {top: 30, right: 20, bottom: 30, left: 50},
+var margin = {top: 30, right: 20, bottom: 0, left: 50},
     width = 800,
-    height = 500,
+    height = 450,
     data,
     root1,
     root2
     duration_tips=700;
 
-var svg = d3.select("body")
+var svg = d3.select(".chart")
 	  .append("svg")
 		.attr("width", width + margin.left + margin.right)
 		.attr("height", height + margin.top + margin.bottom)
 
-var color2 = d3.scaleOrdinal()
-      .domain(["New York", "San Francisco", "Austin"])
-      .range(["#FF0000", "#009933" , "#0000FF"]);
+var color = d3.scaleOrdinal()
+      .domain(["Asia & Pacific", "Africa", "Arab States","The Americas","Europe","CIS"])
+      .range(["#e78ac3", "#a6d854" , "#ffd92f","#fc8d62","#66c2a5","#8da0cb"]);
 
-var fader = function(color) { return d3.interpolateRgb(color, "#fff")(0.2); },
-    color = d3.scaleOrdinal(d3.schemeCategory20.map(fader)),
+var /*fader = function(color) { return d3.interpolateRgb(color, "#fff")(0.2); },
+    color = d3.scaleOrdinal(d3.schemeCategory20.map(fader)),*/
     format = d3.format(",.2r")
     x_padding = 2
     y_padding = 15;
@@ -151,9 +155,9 @@ var nest2 = d3.nest()
   treemap(root1);
   treemap(root2);
 
-  var ratio = Math.sqrt(accumulate(root1)/accumulate(root2))
+  var ratio = Math.sqrt(root1.value/root2.value)
 
-  //console.log(ratio)
+
 
   var cell = svg.selectAll("g")
     .data(root1.leaves())
@@ -192,6 +196,7 @@ var nest2 = d3.nest()
         .attr("class", "node-label")
         .attr("x", function(d) { return d.dx; })
         .attr("y", function(d) { return d.dy; })
+        .attr("cursor","default")
         .attr("dy", y_padding + "px")
         .attr("dx", x_padding + "px")
         .call(fit_text,1)
@@ -215,6 +220,7 @@ var nest2 = d3.nest()
 
   cell.append("text")
         .attr("class", "node-value")
+        .attr("cursor","default")
         .attr("x", function(d) { return d.dx; })
         .attr("y", function(d) { return d.dy; })
         .attr("dy", 2*y_padding + "px")
@@ -239,21 +245,23 @@ var nest2 = d3.nest()
           });
 
 // Add legend according to selected colors
-    d3.select("body")
+    d3.select(".chart")
     	.append("svg")
         .attr("class","legend")
     		.attr("width", "200")
-    		.attr("height", height);
+    		.attr("height", height+ margin.top + margin.bottom);
 
     legend = d3.select("svg.legend");
 
+
+    // Rank regions per non-users and draw legend from + to -
     legend
-      .call(draw_legend,1,"blue","Asia-Pacific")
-      .call(draw_legend,2,"gray","Africa")
-      .call(draw_legend,3,"orange","The Americas")
-      .call(draw_legend,4,"lightblue","Arab States")
-      .call(draw_legend,5,"lightgreen","CIS")
-      .call(draw_legend,6,"green","Europe");
+      .call(draw_legend,1,root1.children[0].data.key)
+      .call(draw_legend,2,root1.children[1].data.key)
+      .call(draw_legend,3,root1.children[2].data.key)
+      .call(draw_legend,4,root1.children[3].data.key)
+      .call(draw_legend,5,root1.children[4].data.key)
+      .call(draw_legend,6,root1.children[5].data.key);
 // Legend drawn
 
 
@@ -297,6 +305,21 @@ var nest2 = d3.nest()
         .attr("dy", 2*y_padding + "px")
         .attr("dx", x_padding + "px")
         .call(fit_value,ratio);
+
+    // Update legend
+    legend2 = d3.select("svg.legend");
+
+    // Rank regions per non-users and draw legend from + to -
+    legend2
+      .transition()
+      .duration(1000)
+      .call(update_legend,1,root2.children[0].data.key)
+      .call(update_legend,2,root2.children[1].data.key)
+      .call(update_legend,3,root2.children[2].data.key)
+      .call(update_legend,4,root2.children[3].data.key)
+      .call(update_legend,5,root2.children[4].data.key)
+      .call(update_legend,6,root2.children[5].data.key);
+
 
   });
 
@@ -344,21 +367,42 @@ var nest2 = d3.nest()
   });
 });
 
-function draw_legend(selection, pos,color,text){
+function update_legend(selection, pos,text){
+
+  var selector = "rect[id='"+text+"']"
+  var selector2 = "text[id='"+text+"s"+"']"
+
+  console.log(selector,selector2)
+
+      selection
+          .select(selector)
+            .attr("y",function(d){return 60*pos});
+      selection
+          .select(selector2)
+          .attr("y",function(d){return 60*pos});
+
+}
+function draw_legend(selection, pos,text){
+
+
       selection
           .append('rect')
+            .attr('id',text)
             .attr("width", "20")
             .attr("height", "20")
-            .attr("y",function(d){return 50*(pos-1)})
-            .attr("fill", color);
+            .attr("y",function(d){return 60*pos})
+            .attr("fill", color(text));
       selection
           .append("text")
-          .attr("y",function(d){return 50*(pos-1)})
+          .attr('id',text+"s")
+          .attr("y",function(d){return 60*pos})
           .attr("dy", y_padding + "px")
           .attr("dx", 15*x_padding + "px")
           .text(text);
 
 }
+
+
 function fit_text(selection,scale){
 
   selection
@@ -436,3 +480,14 @@ function getTextHeigth(text, fontSize, fontFace) {
     return b.measureText(text).heigth;
 }
 </script>
+
+<h2> Comments</h2>
+<p> The International Telecommunications Union (ITU, the United Nations  specialized agency for information and communication technologies) is the official source for global ICT statistics.</p>
+<p> ITU collects statistics on several ICT developments, being one of the most important indicators the one measuring "Internet users" (e.g. it is included in the Sustainable Development Goals' global indicator framework). ITU wants to draw attention to the population not yet connected by informing on questions such as: How many are they? Where are they? What is the situation today compared to five years ago?</p>
+<p>This chart is an (initial) proposal to visually present the data on non-Internet users and address the questions raised about them. Based on ITU's feedback and BGSE's (Michael Greenacre), further refinements will be made.</p>
+<p>The regional classification corresponds to that followed by ITU (UN M49). Colors have been chosen based on the Color Brewer qualitative palette that better matches <a href="http://www.itu.int/en/ITU-D/Pages/ITUAroundTheWorld.aspx">ITU's usual colors for regions</a> ).</p>
+<p>The treemap proposed allows to visually see in which regions and countries most non-Internet users live. Indeed, from top to bottom and left to right, countries and regions are classified according to the absolute number of non-Internet users. The size of the treemap is proportional to the global number of non-Interent users in 2010. As a result, the animation shows graphically how the unconnected have decreased, plus changes in relative rankings within regions. For instance, Brazil was the country with most non-Internet users in the Americas in 2010, whereas in 2015 the United States was home to the largest number of non-Internet users.</p>
+<p>The labels of each cell have been customized in order to appear only when there is enough space (to avoid overcrowding). Nevertheless, the user can explore the whole data set by moving the cursor across the treemap and the underlying data for each country is displayed in a tooltip.</p>
+
+<p> The d3.js code and the underlying data (csv format) are available at my <a href="https://github.com/ivan-vallejo/Data_Visualization">GitHub account</a>. </p>
+</body>
