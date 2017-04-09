@@ -15,7 +15,7 @@ body {
 
 div.tooltip {
   position: absolute;
-  width: 130px;
+  width: auto;
   height: auto;
   padding: 10px;
   background-color: white;
@@ -26,6 +26,14 @@ div.tooltip {
   -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
   box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
   pointer-events: none;
+}
+br.long {
+       line-height: 150%;
+    }
+
+h1{
+  margin-left: 1em;
+  margin-top: 1em;
 }
 svg.legend{
 
@@ -40,6 +48,10 @@ svg.legend{
   font-weight: normal;
 }
 
+.btn-group{
+  margin-left: 3em;
+  margin-top: 3em;
+}
 .btn-group .button {
     background-color: #4CAF50; /* Green */
     border: none;
@@ -59,6 +71,13 @@ svg.legend{
 
 .btn-group .buttonsel:hover {
     background-color: #3e8e41;
+}
+
+#total{
+  padding-top: 10px;
+  text-indent: 100px;
+  font-weight: normal;
+  font-size: 20px;
 }
 
 .btn-group .buttonsel {
@@ -85,6 +104,7 @@ svg.legend{
 <div class="btn-group">
   <button class="buttonsel" id="d2010" >2010</button>
   <button class="button" id="d2015">2015</button>
+  <div id="total"> Total non-Internet users: <span id="tot_value"> </span> million</div>
 </div>
 <br style="clear:both">
 <br>
@@ -93,13 +113,13 @@ svg.legend{
 
 <script>
 
-var margin = {top: 30, right: 20, bottom: 0, left: 50},
+var margin = {top: 30, right: 20, bottom: 0, left: 30},
+    margin_legend = {top: 30, left: 70},
     width = 800,
     height = 450,
-    data,
-    root1,
-    root2
-    duration_tips=700;
+    data, root1, root2, duration_tips=700, duration_transitions=4000;
+
+var d2015 = false;
 
 var svg = d3.select(".chart")
 	  .append("svg")
@@ -110,9 +130,8 @@ var color = d3.scaleOrdinal()
       .domain(["Asia & Pacific", "Africa", "Arab States","The Americas","Europe","CIS"])
       .range(["#e78ac3", "#a6d854" , "#ffd92f","#fc8d62","#66c2a5","#8da0cb"]);
 
-var /*fader = function(color) { return d3.interpolateRgb(color, "#fff")(0.2); },
-    color = d3.scaleOrdinal(d3.schemeCategory20.map(fader)),*/
-    format = d3.format(",.2r")
+var format = d3.format(",.2r")
+    format2 = d3.format(",.3r")
     x_padding = 2
     y_padding = 15;
 
@@ -130,12 +149,16 @@ var nest1 = d3.nest()
     .key(function(d) { return d.region; })
     .key(function(d) { return d.iso; })
     .key(function(d) { return d.country; })
+    .key(function(d) { return d.i99h2010; })
+    .key(function(d) { return d.data2015; })
     .rollup(function(d) { return d3.sum(d, function(d) { return parseFloat(d.data2010); }); });
 
 var nest2 = d3.nest()
     .key(function(d) { return d.region; })
     .key(function(d) { return d.iso; })
     .key(function(d) { return d.country; })
+    .key(function(d) { return d.i99h2015; })
+    .key(function(d) { return d.data2010; })
     .rollup(function(d) { return d3.sum(d, function(d) { return parseFloat(d.data2015); }); });
 
 
@@ -155,6 +178,8 @@ var nest2 = d3.nest()
   treemap(root1);
   treemap(root2);
 
+  console.log(root1,root2)
+
   var ratio = Math.sqrt(root1.value/root2.value)
 
 
@@ -162,13 +187,13 @@ var nest2 = d3.nest()
   var cell = svg.selectAll("g")
     .data(root1.leaves())
     .enter().append("g")
-      .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
+      .attr("transform", function(d) { x= d.x0 +margin.left; y= d.y0 +margin.left; return "translate(" + x + "," + y + ")"; });
 
   cell.append("rect")
-      .attr("id", function(d) { return d.parent.data.key; })
+      .attr("id", function(d) { return d.parent.parent.parent.data.key; })
       .attr("width", function(d) { return d.x1 - d.x0; })
       .attr("height", function(d) { return d.y1 - d.y0; })
-      .attr("fill", function(d) { return color(d.parent.parent.data.key); })
+      .attr("fill", function(d) { return color(d.parent.parent.parent.parent.data.key); })
       .on("mouseover", function(d) {
             div.transition();
             div.style("opacity", 0);
@@ -178,7 +203,7 @@ var nest2 = d3.nest()
             div.style("opacity",0)
             .style("left", (d3.event.pageX+10) + "px")
             .style("top", (d3.event.pageY - 10) + "px")
-            .html(d.data.key + "<br>"+ "("+ d.parent.parent.data.key +")" + "<br/>"  + String(format(d.value/1000000))+"M non-users");
+            .html("<b>" + d.parent.parent.data.key + "</b>" + " - " + "<small>" + d.parent.parent.parent.parent.data.key + "</small>" + "<br class='long'>"  + String(format(d.value/1000000))+"M non-users " + add_stats(d.parent.data.key,d.data.key,d.value,d2015));
 
             div.transition()
                 .delay(1000)
@@ -207,7 +232,7 @@ var nest2 = d3.nest()
               div.style("opacity",0)
               .style("left", (d3.event.pageX+10) + "px")
               .style("top", (d3.event.pageY - 10) + "px")
-              .html(d.data.key + "<br>"+ "("+ d.parent.parent.data.key +")"+"<br/>"  + String(format(d.value/1000000))+"M non-users");
+              .html("<b>" + d.parent.parent.data.key + "</b>" + " - " + "<small>" + d.parent.parent.parent.parent.data.key + "</small>" + "<br class='long'>"  + String(format(d.value/1000000))+"M non-users " + add_stats(d.parent.data.key,d.data.key,d.value,d2015));
 
               div.transition()
                   .delay(1000)
@@ -233,7 +258,7 @@ var nest2 = d3.nest()
               div.style("opacity",0)
               .style("left", (d3.event.pageX+10) + "px")
               .style("top", (d3.event.pageY - 10) + "px")
-              .html(d.data.key + "<br>"+ "("+ d.parent.parent.data.key +")"+"<br/>"  + String(format(d.value/1000000))+"M non-users");
+              .html("<b>" + d.parent.parent.data.key + "</b>" + " - " + "<small>" + d.parent.parent.parent.parent.data.key + "</small>" + "<br class='long'>"  + String(format(d.value/1000000))+"M non-users " + add_stats(d.parent.data.key,d.data.key,d.value,d2015));
 
               div.transition()
                   .delay(1000)
@@ -248,7 +273,7 @@ var nest2 = d3.nest()
     d3.select(".chart")
     	.append("svg")
         .attr("class","legend")
-    		.attr("width", "200")
+    		.attr("width", "300")
     		.attr("height", height+ margin.top + margin.bottom);
 
     legend = d3.select("svg.legend");
@@ -256,55 +281,57 @@ var nest2 = d3.nest()
 
     // Rank regions per non-users and draw legend from + to -
     legend
-      .call(draw_legend,1,root1.children[0].data.key)
-      .call(draw_legend,2,root1.children[1].data.key)
-      .call(draw_legend,3,root1.children[2].data.key)
-      .call(draw_legend,4,root1.children[3].data.key)
-      .call(draw_legend,5,root1.children[4].data.key)
-      .call(draw_legend,6,root1.children[5].data.key);
+      .call(draw_legend,1,root1.children[0].data.key,margin_legend)
+      .call(draw_legend,2,root1.children[1].data.key,margin_legend)
+      .call(draw_legend,3,root1.children[2].data.key,margin_legend)
+      .call(draw_legend,4,root1.children[3].data.key,margin_legend)
+      .call(draw_legend,5,root1.children[4].data.key,margin_legend)
+      .call(draw_legend,6,root1.children[5].data.key,margin_legend);
 // Legend drawn
 
+    // Write total figure at the top
+    d3.select("#tot_value")
+      .text(String(format(root1.value/1000000)));
 
   d3.select("#d2015").on("click", function() {
 
-  //svg.selectAll("text").remove();
 
-  d3.select("#d2015").attr("class","btn-group buttonsel");
-  d3.select("#d2010").attr("class","btn-group button");
+  d3.select("#d2015").attr("class","buttonsel");
+  d3.select("#d2010").attr("class","button");
+  d2015 = true;
 
-  cell.data(root2.leaves(),function(d){return d.parent.data.key})
+  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key})
         .transition()
-        .duration(1000)
-        .attr("transform", function(d) { return "translate(" + d.x0/ratio + "," + d.y0/ratio + ")"; });
+        .duration(duration_transitions)
+        .attr("transform", function(d) { x= d.x0/ratio +margin.left; y= d.y0/ratio +margin.left; return "translate(" + x + "," + y + ")"; });
 
 
-  cell.data(root2.leaves(),function(d){return d.parent.data.key}).select("rect")
+  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select("rect")
       .transition()
-      .duration(1000)
+      .duration(duration_transitions)
       .attr("width", function(d) { return (d.x1 - d.x0)/ratio; })
       .attr("height", function(d) { return (d.y1 - d.y0)/ratio; })
       .attr("stroke","white")
-      .attr("stroke-width","0.5")
-      .attr("fill", function(d) { return color(d.parent.parent.data.key); });
+      .attr("stroke-width","0.5");
 
 
-  cell.data(root2.leaves(),function(d){return d.parent.data.key}).select(".node-label")
+  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-label")
         .transition()
-        .duration(1000)
-        .attr("x", function(d) { return d.dx; })
-        .attr("y", function(d) { return d.dy; })
-        .attr("dy", y_padding + "px")
-        .attr("dx", x_padding + "px")
+        .delay(duration_transitions/2)
+        .attr("opacity",1)
         .call(fit_text,ratio);
 
-  cell.data(root2.leaves(),function(d){return d.parent.data.key}).select(".node-value")
+  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-value")
         .transition()
-        .duration(1000)
-        .attr("x", function(d) { return d.dx; })
-        .attr("y", function(d) { return d.dy; })
-        .attr("dy", 2*y_padding + "px")
-        .attr("dx", x_padding + "px")
-        .call(fit_value,ratio);
+        .duration(duration_transitions/2)
+        .style("fill-opacity",1e-6);
+
+  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-value")
+        .transition()
+        .delay(duration_transitions/2)
+        .call(fit_value,ratio)
+        .duration(duration_transitions/2)
+        .style("fill-opacity",1);
 
     // Update legend
     legend2 = d3.select("svg.legend");
@@ -312,77 +339,119 @@ var nest2 = d3.nest()
     // Rank regions per non-users and draw legend from + to -
     legend2
       .transition()
-      .duration(1000)
-      .call(update_legend,1,root2.children[0].data.key)
-      .call(update_legend,2,root2.children[1].data.key)
-      .call(update_legend,3,root2.children[2].data.key)
-      .call(update_legend,4,root2.children[3].data.key)
-      .call(update_legend,5,root2.children[4].data.key)
-      .call(update_legend,6,root2.children[5].data.key);
+      .duration(duration_transitions)
+      .call(update_legend,1,root2.children[0].data.key,margin_legend)
+      .call(update_legend,2,root2.children[1].data.key,margin_legend)
+      .call(update_legend,3,root2.children[2].data.key,margin_legend)
+      .call(update_legend,4,root2.children[3].data.key,margin_legend)
+      .call(update_legend,5,root2.children[4].data.key,margin_legend)
+      .call(update_legend,6,root2.children[5].data.key,margin_legend);
+
+    d3.select("#tot_value")
+      .transition()
+      .duration(duration_transitions)
+      .tween("text", function(d) {
+          var i = d3.interpolate(root1.value/1000000, root2.value/1000000);
+
+          return function(t) {
+            d3.select("#tot_value").text(format2(i(t)));
+          };
+      });
+
 
 
   });
 
   d3.select("#d2010").on("click", function() {
 
-  //svg.selectAll("rect").remove()
-  //svg.selectAll("text").remove()
 
-  d3.select("#d2015").attr("class","btn-group button");
-  d3.select("#d2010").attr("class","btn-group buttonsel");
-
+  d3.select("#d2015").attr("class","button");
+  d3.select("#d2010").attr("class","buttonsel");
+  d2015 = false;
 
   cell.data(root1.leaves())
         .transition()
-        .duration(1000)
-        .attr("transform", function(d) { return "translate(" + d.x0 + "," + d.y0 + ")"; });
+        .duration(duration_transitions)
+        .attr("transform", function(d) { x= d.x0 +margin.left; y= d.y0 +margin.left; return "translate(" + x + "," + y + ")"; });
 
   cell.data(root1.leaves()).select("rect")
       .transition()
-      .duration(1000)
+      .duration(duration_transitions)
       .attr("width", function(d) { return d.x1 - d.x0; })
       .attr("height", function(d) { return d.y1 - d.y0; })
       .attr("stroke","white")
-      .attr("stroke-width","0.5")
-      .attr("fill", function(d) { return color(d.parent.parent.data.key); });
+      .attr("stroke-width","0.5");
 
   cell.data(root1.leaves()).select(".node-label")
         .transition()
-        .duration(1000)
-        .attr("x", function(d) { return d.dx; })
-        .attr("y", function(d) { return d.dy; })
-        .attr("dy", y_padding + "px")
-        .attr("dx", x_padding + "px")
+        .delay(duration_transitions/2)
         .call(fit_text,1);
 
     cell.data(root1.leaves()).select(".node-value")
         .transition()
-        .duration(1000)
-        .attr("x", function(d) { return d.dx; })
-        .attr("y", function(d) { return d.dy; })
-        .attr("dy", 2*y_padding + "px")
-        .attr("dx", x_padding + "px")
-        .call(fit_value,1);
+        .duration(duration_transitions/2)
+        .style("fill-opacity",1e-6);
+
+    cell.data(root1.leaves()).select(".node-value")
+        .transition()
+        .delay(duration_transitions/2)
+        .call(fit_value,1)
+        .duration(duration_transitions/2)
+        .style("fill-opacity",1);
+
+        d3.select("#tot_value")
+          .transition()
+          .duration(duration_transitions)
+          .tween("text", function(d) {
+              var i = d3.interpolate(root2.value/1000000, root1.value/1000000);
+
+              return function(t) {
+                d3.select("#tot_value").text(format2(i(t)));
+              };
+          });
+
 
   });
 });
+
+function add_stats(perusers, data2010, data2015,bool2015){
+  users = parseFloat(perusers)
+  nonusers = 100-users
+
+  if(bool2015){
+    nums2010 = parseFloat(data2010)
+    decrease = (data2015-nums2010 < 0) ? true : false
+    if(decrease){
+      value = d3.format(",.2r")((nums2010-data2015)/1000000)
+      return ("<small>"+ "(" + nonusers + "% population)" + "</small>" + "<br>" + "<b>" + "<font color='green'>" + value + "M" + "</font>" + "</b>" + " less than in 2010")
+
+    }else{
+      value = d3.format(",.2r")((data2015-nums2010)/1000000)
+      return ("<small>"+ "(" + nonusers + "% population)" + "</small>" + "<br>" + "<b>" + "<font color='darkred'>" + value + "M" + "</font>" + "</b>" + " more than in 2010")
+    }
+
+  } else {
+    return ("<small>"+ "(" + nonusers + "% population)" + "</small>")
+  }
+
+
+}
+
 
 function update_legend(selection, pos,text){
 
   var selector = "rect[id='"+text+"']"
   var selector2 = "text[id='"+text+"s"+"']"
 
-  console.log(selector,selector2)
-
       selection
           .select(selector)
-            .attr("y",function(d){return 60*pos});
+            .attr("y",function(d){return margin.top + 60*pos});
       selection
           .select(selector2)
-          .attr("y",function(d){return 60*pos});
+          .attr("y",function(d){return margin.top + 60*pos});
 
 }
-function draw_legend(selection, pos,text){
+function draw_legend(selection, pos,text, margin){
 
 
       selection
@@ -390,12 +459,14 @@ function draw_legend(selection, pos,text){
             .attr('id',text)
             .attr("width", "20")
             .attr("height", "20")
-            .attr("y",function(d){return 60*pos})
+            .attr("x", margin.left)
+            .attr("y",function(d){return margin.top + 60*pos})
             .attr("fill", color(text));
       selection
           .append("text")
           .attr('id',text+"s")
-          .attr("y",function(d){return 60*pos})
+          .attr("x", margin.left)
+          .attr("y",function(d){return margin.top + 60*pos})
           .attr("dy", y_padding + "px")
           .attr("dx", 15*x_padding + "px")
           .text(text);
@@ -408,8 +479,8 @@ function fit_text(selection,scale){
   selection
     .text( function(d){
 
-      var iso = String(d.parent.data.key).toUpperCase()
-      var fullname = String(d.data.key)
+      var iso = String(d.parent.parent.parent.data.key).toUpperCase()
+      var fullname = String(d.parent.parent.data.key)
 
 
       if((getTextWidth(fullname,15,"arial") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"arial") < (((d.y1 - d.y0)-y_padding)/scale))) {
@@ -430,7 +501,7 @@ function fit_text(selection,scale){
 
     .attr("font-size",function(d){
 
-      var iso = String(d.parent.data.key).toUpperCase()
+      var iso = String(d.parent.parent.parent.data.key).toUpperCase()
 
         if((getTextWidth(iso,15,"arial") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"arial") < (((d.y1 - d.y0)-y_padding)/scale))){
 
