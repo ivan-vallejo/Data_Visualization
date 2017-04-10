@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<style>
+
+form {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+svg {
+  font: 10px arial;
+}
+
+body {
+  font: 15px arial;
+}
+
+div.tooltip {
+  position: absolute;
+  width: auto;
+  height: auto;
+  padding: 10px;
+  background-color: white;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+  -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+  -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+br.long {
+       line-height: 150%;
+    }
+
+h1{
+  margin-left: 1em;
+  margin-top: 1em;
+}
+svg.legend{
+
+  font: 20px arial;
+
+}
+
+.node-label {
+  /*font: 15px sans-serif;*/
+}
+.node-value {
+  font-weight: normal;
+}
+
+.btn-group{
+  margin-left: 3em;
+  margin-top: 3em;
+}
+.btn-group .button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    float: left;
+}
+
+.btn-group .button:hover {
+    background-color: #3e8e41;
+}
+
+.btn-group .buttonsel:hover {
+    background-color: #3e8e41;
+}
+
+#total{
+  padding-top: 10px;
+  text-indent: 100px;
+  font-weight: normal;
+  font-size: 20px;
+}
+
+.btn-group .buttonsel {
+  background-color: #4CAF55; /* Green */
+  border: 5px solid black;
+  color: white;
+  padding: 10px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+  float: left;
+}
+
+
+</style>
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+
+<body>
+  <h1> Non-Internet users by region and country, 2010-2015 </h1>
+
+<div class="btn-group">
+  <button class="buttonsel" id="d2010" >2010</button>
+  <button class="button" id="d2015">2015</button>
+  <div id="total"> Total non-Internet users: <span id="tot_value"> </span> million</div>
+</div>
+<br style="clear:both">
+<br>
+<div class="chart">
+</div>
+
+<script>
+
+var margin = {top: 30, right: 20, bottom: 0, left: 30},
+    margin_legend = {top: 30, left: 70},
+    width = 800,
+    height = 450,
+    data, root1, root2, duration_tips=700, duration_transitions=4000;
+
+var d2015 = false,
+    dzoom = false;
+
+var svg = d3.select(".chart")
+	  .append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+
+var color = d3.scaleOrdinal()
+      .domain(["Asia & Pacific", "Africa", "Arab States","The Americas","Europe","CIS"])
+      .range(["#e78ac3", "#a6d854" , "#ffd92f","#fc8d62","#66c2a5","#8da0cb"]);
+
+var format = d3.format(",.2r")
+    format2 = d3.format(",.3r")
+    x_padding = 2
+    y_padding = 15;
+
+var treemap = d3.treemap()
+    .tile(d3.treemapResquarify)
+    .size([width, height])
+    .round(false)
+    .paddingLeft(0)
+    .paddingRight(0)
+    .paddingInner(0);
+
+
+var div = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+var nest1 = d3.nest()
+    .key(function(d) { return d.region; })
+    .key(function(d) { return d.iso; })
+    .key(function(d) { return d.country; })
+    .key(function(d) { return d.i99h2010; })
+    .key(function(d) { return d.data2015; })
+    .rollup(function(d) { return d3.sum(d, function(d) { return parseFloat(d.data2010); }); });
+
+var nest2 = d3.nest()
+    .key(function(d) { return d.region; })
+    .key(function(d) { return d.iso; })
+    .key(function(d) { return d.country; })
+    .key(function(d) { return d.i99h2015; })
+    .key(function(d) { return d.data2010; })
+    .rollup(function(d) { return d3.sum(d, function(d) { return parseFloat(d.data2015); }); });
+
+
+    d3.csv("Non_Int_users.csv", function(error, csv_data) {
+      if (error) throw error;
+
+      data = csv_data;
+
+      var root1 = d3.hierarchy({values: nest1.entries(data)}, function(d) { return d.values; })
+          .sum(function(d) { return d.value; })
+          .sort(function(a, b) { return b.value - a.value; });
+
+      var root2 = d3.hierarchy({values: nest2.entries(data)}, function(d) { return d.values; })
+          .sum(function(d) { return d.value; })
+          .sort(function(a, b) { return b.value - a.value; });
+
+
+  treemap(root1);
+  treemap(root2);
+
+  node = root1;
+
+  var ratio = Math.sqrt(root1.value/root2.value)
+
+
+
+  var cell = svg.selectAll("g")
+    .data(root1.leaves())
+    .enter().append("g")
+      .attr("class", "cell")
+      .attr("transform", function(d) { x= d.x0 +margin.left; y= d.y0 +margin.top; return "translate(" + x + "," + y + ")"; })
+      .on("click", function(d) {node == d.parent.parent.parent.parent ? dzoom = false : dzoom =true ;return zoom(node == d.parent.parent.parent.parent ? root1 : d.parent.parent.parent.parent); });
+
+  cell.append("rect")
+      .attr("id", function(d) { return d.parent.parent.parent.data.key; })
+      .attr("width", function(d) {return Math.max(d.x1 - d.x0-1,0); })
+      .attr("height", function(d) { return Math.max(d.y1 - d.y0-1,0); })
+      .attr("fill", function(d) { return color(d.parent.parent.parent.parent.data.key); })
+      .on("mouseover", function(d) {
+            div.transition();
+            div.style("opacity", 0);
+        })
+      .on("mousemove", function(d) {
+            div.transition();
+            div.style("opacity",0)
+            .style("left", (d3.event.pageX+10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px")
+            .html("<b>" + d.parent.parent.data.key + "</b>" + " - " + "<small>" + d.parent.parent.parent.parent.data.key + "</small>" + "<br class='long'>"  + String(format(d.value/1000000))+"M non-users " + add_stats(d.parent.data.key,d.data.key,d.value,d2015));
+
+            div.transition()
+                .delay(1000)
+                .duration(duration_tips)
+                .style("opacity", .9);
+
+            })
+
+      .on("mouseout", function(d) {
+            div.transition();
+            div.style("opacity", 0);
+        });
+
+  cell.append("text")
+        .attr("class", "node-label")
+        .attr("x", function(d) { return d.dx; })
+        .attr("y", function(d) { return d.dy; })
+        .attr("cursor","default")
+        .attr("dy", y_padding + "px")
+        .attr("dx", x_padding + "px")
+        .call(fit_text,1)
+        .on("mouseover", function(d) {
+              div.style("opacity", 0);
+          })
+        .on("mousemove", function(d) {
+              div.style("opacity",0)
+              .style("left", (d3.event.pageX+10) + "px")
+              .style("top", (d3.event.pageY - 10) + "px")
+              .html("<b>" + d.parent.parent.data.key + "</b>" + " - " + "<small>" + d.parent.parent.parent.parent.data.key + "</small>" + "<br class='long'>"  + String(format(d.value/1000000))+"M non-users " + add_stats(d.parent.data.key,d.data.key,d.value,d2015));
+
+              div.transition()
+                  .delay(1000)
+                  .duration(duration_tips)
+                  .style("opacity", .9);
+              })
+        .on("mouseout", function(d) {
+              div.style("opacity", 0);
+          });
+
+  cell.append("text")
+        .attr("class", "node-value")
+        .attr("cursor","default")
+        .attr("x", function(d) { return d.dx; })
+        .attr("y", function(d) { return d.dy; })
+        .attr("dy", 2*y_padding + "px")
+        .attr("dx", x_padding + "px")
+        .call(fit_value,1)
+        .on("mouseover", function(d) {
+              div.style("opacity", 0);
+          })
+        .on("mousemove", function(d) {
+              div.style("opacity",0)
+              .style("left", (d3.event.pageX+10) + "px")
+              .style("top", (d3.event.pageY - 10) + "px")
+              .html("<b>" + d.parent.parent.data.key + "</b>" + " - " + "<small>" + d.parent.parent.parent.parent.data.key + "</small>" + "<br class='long'>"  + String(format(d.value/1000000))+"M non-users " + add_stats(d.parent.data.key,d.data.key,d.value,d2015));
+
+              div.transition()
+                  .delay(1000)
+                  .duration(duration_tips)
+                  .style("opacity", .9);
+              })
+        .on("mouseout", function(d) {
+              div.style("opacity", 0);
+          });
+
+      //d3.select(window).on("click", function() { dzoom = false; zoom(root1); });
+
+// Add legend according to selected colors
+    d3.select(".chart")
+    	.append("svg")
+        .attr("class","legend")
+    		.attr("width", "300")
+    		.attr("height", height+ margin.top + margin.bottom);
+
+    legend = d3.select("svg.legend");
+
+
+    // Rank regions per non-users and draw legend from + to -
+    legend
+      .call(draw_legend,1,root1.children[0].data.key,margin_legend)
+      .call(draw_legend,2,root1.children[1].data.key,margin_legend)
+      .call(draw_legend,3,root1.children[2].data.key,margin_legend)
+      .call(draw_legend,4,root1.children[3].data.key,margin_legend)
+      .call(draw_legend,5,root1.children[4].data.key,margin_legend)
+      .call(draw_legend,6,root1.children[5].data.key,margin_legend);
+// Legend drawn
+
+    // Write total figure at the top
+    d3.select("#tot_value")
+      .text(String(format(root1.value/1000000)));
+
+  d3.select("#d2015").on("click", function() {
+
+
+  d3.select("#d2015").attr("class","buttonsel");
+  d3.select("#d2010").attr("class","button");
+  d2015 = true;
+
+  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key})
+        .transition()
+        .duration(duration_transitions)
+        .attr("transform", function(d) { x= d.x0/ratio +margin.left; y= d.y0/ratio +margin.top; return "translate(" + x + "," + y + ")"; });
+
+
+  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select("rect")
+      .transition()
+      .duration(duration_transitions)
+      .attr("width", function(d) { return Math.max((d.x1 - d.x0-1)/ratio,0); })
+      .attr("height", function(d) { return Math.max((d.y1 - d.y0-1)/ratio,0); })
+      .attr("stroke","white")
+      .attr("stroke-width","0.5");
+
+
+  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-label")
+        .transition()
+        .delay(duration_transitions/2)
+        .attr("opacity",1)
+        .call(fit_text,ratio);
+
+  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-value")
+        .transition()
+        .duration(duration_transitions/2)
+        .style("fill-opacity",1e-6);
+
+  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-value")
+        .transition()
+        .delay(duration_transitions/2)
+        .call(fit_value,ratio)
+        .duration(duration_transitions/2)
+        .style("fill-opacity",1);
+
+    // Update legend
+    legend2 = d3.select("svg.legend");
+
+    // Rank regions per non-users and draw legend from + to -
+    legend2
+      .transition()
+      .duration(duration_transitions)
+      .call(update_legend,1,root2.children[0].data.key,margin_legend)
+      .call(update_legend,2,root2.children[1].data.key,margin_legend)
+      .call(update_legend,3,root2.children[2].data.key,margin_legend)
+      .call(update_legend,4,root2.children[3].data.key,margin_legend)
+      .call(update_legend,5,root2.children[4].data.key,margin_legend)
+      .call(update_legend,6,root2.children[5].data.key,margin_legend);
+
+    d3.select("#tot_value")
+      .transition()
+      .duration(duration_transitions)
+      .tween("text", function(d) {
+          var i = d3.interpolate(root1.value/1000000, root2.value/1000000);
+
+          return function(t) {
+            d3.select("#tot_value").text(format2(i(t)));
+          };
+      });
+
+
+
+  });
+
+  d3.select("#d2010").on("click", function() {
+
+
+  d3.select("#d2015").attr("class","button");
+  d3.select("#d2010").attr("class","buttonsel");
+  d2015 = false;
+
+  cell.data(root1.leaves())
+        .transition()
+        .duration(duration_transitions)
+        .attr("transform", function(d) { x= d.x0 +margin.left; y= d.y0 +margin.top; return "translate(" + x + "," + y + ")"; });
+
+  cell.data(root1.leaves()).select("rect")
+      .transition()
+      .duration(duration_transitions)
+      .attr("width", function(d) { return Math.max(d.x1 - d.x0-1,0); })
+      .attr("height", function(d) { return Math.max(d.y1 - d.y0-1,0); })
+      .attr("stroke","white")
+      .attr("stroke-width","0.5");
+
+  cell.data(root1.leaves()).select(".node-label")
+        .transition()
+        .delay(duration_transitions/2)
+        .call(fit_text,1);
+
+    cell.data(root1.leaves()).select(".node-value")
+        .transition()
+        .duration(duration_transitions/2)
+        .style("fill-opacity",1e-6);
+
+    cell.data(root1.leaves()).select(".node-value")
+        .transition()
+        .delay(duration_transitions/2)
+        .call(fit_value,1)
+        .duration(duration_transitions/2)
+        .style("fill-opacity",1);
+
+        d3.select("#tot_value")
+          .transition()
+          .duration(duration_transitions)
+          .tween("text", function(d) {
+              var i = d3.interpolate(root2.value/1000000, root1.value/1000000);
+
+              return function(t) {
+                d3.select("#tot_value").text(format2(i(t)));
+              };
+          });
+
+
+  });
+});
+
+function zoom(d) {
+
+
+  var dx = d.x1-d.x0;
+  var dy = d.y1-d.y0;
+  var x = d3.scaleLinear()
+      .domain([d.x0, d.x1])
+      .range([0, width]);
+  var y = d3.scaleLinear()
+      .domain([d.y0, d.y1])
+      .range([0, height]);
+  var kx = width / dx, ky = height / dy;
+
+  //console.log([d.x0, d.x0 + dx],[d.y0, d.y0 + dy])
+  //console.log([0, width],[0, height])
+  console.log(kx, ky)
+
+
+  var t = svg.selectAll("g.cell");
+    t
+      .transition()
+      .duration(duration_transitions)
+      .attr("transform", function(d) { xn= x(d.x0)+margin.left; yn= y(d.y0)+margin.top;return "translate(" + xn + "," + yn + ")"; });
+
+
+  t.select("rect")
+          .transition()
+          .duration(duration_transitions)
+          .attr("width", function(d) {return x(d.x1) - x(d.x0); })
+          .attr("height", function(d) { return y(d.y1) - y(d.y0); })
+          .attr("stroke","white")
+          .attr("stroke-width","0.5")
+          .style("opacity", function(d) {return (x(d.x0) < 0 || x(d.x1) > width+0.1 || y(d.y0) < 0 || y(d.y1) > height+0.1 ) ? 0 : 1; });
+
+if(dzoom){
+  t.select(".node-label")
+      .style("opacity", function(d) {return (x(d.x0) < 0 || x(d.x1) > width +0.1 || y(d.y0) < 0 || y(d.y1) > height +0.1 ) ? 0 : 1; })
+      .transition()
+      .delay(duration_transitions/2)
+      .call(fit_text,1,x,y);
+
+
+  t.select(".node-value")
+          .style("opacity", function(d) {return (x(d.x0) < 0 || x(d.x1) > width +0.1 || y(d.y0) < 0 || y(d.y1) > height +0.1 ) ? 0 : 1; })
+          .transition()
+          .call(fit_value,1,x,y);
+} else{
+
+  t.select(".node-label")
+      .transition()
+      .delay(duration_transitions/2)
+      .call(fit_text,1)
+      .duration(duration_transitions/2)
+      .style("opacity",1);
+
+
+  t.select(".node-value")
+      .transition()
+      .delay(duration_transitions/2)
+      .call(fit_value,1)
+      .duration(duration_transitions/2)
+      .style("opacity",1);
+
+
+}
+  node = d;
+  d3.event.stopPropagation();
+}
+
+function add_stats(perusers, data2010, data2015,bool2015){
+  users = parseFloat(perusers)
+  nonusers = 100-users
+
+  if(bool2015){
+    nums2010 = parseFloat(data2010)
+    decrease = (data2015-nums2010 < 0) ? true : false
+    if(decrease){
+      value = d3.format(",.2r")((nums2010-data2015)/1000000)
+      return ("<small>"+ "(" + nonusers + "% population)" + "</small>" + "<br>" + "<b>" + "<font color='green'>" + value + "M" + "</font>" + "</b>" + " less than in 2010")
+
+    }else{
+      value = d3.format(",.2r")((data2015-nums2010)/1000000)
+      return ("<small>"+ "(" + nonusers + "% population)" + "</small>" + "<br>" + "<b>" + "<font color='darkred'>" + value + "M" + "</font>" + "</b>" + " more than in 2010")
+    }
+
+  } else {
+    return ("<small>"+ "(" + nonusers + "% population)" + "</small>")
+  }
+
+
+}
+
+
+function update_legend(selection, pos,text){
+
+  var selector = "rect[id='"+text+"']"
+  var selector2 = "text[id='"+text+"s"+"']"
+
+      selection
+          .select(selector)
+            .attr("y",function(d){return margin.top + 60*pos});
+      selection
+          .select(selector2)
+          .attr("y",function(d){return margin.top + 60*pos});
+
+}
+function draw_legend(selection, pos,text, margin){
+
+
+      selection
+          .append('rect')
+            .attr('id',text)
+            .attr("width", "20")
+            .attr("height", "20")
+            .attr("x", margin.left)
+            .attr("y",function(d){return margin.top + 60*pos})
+            .attr("fill", color(text));
+      selection
+          .append("text")
+          .attr('id',text+"s")
+          .attr("x", margin.left)
+          .attr("y",function(d){return margin.top + 60*pos})
+          .attr("dy", y_padding + "px")
+          .attr("dx", 15*x_padding + "px")
+          .text(text);
+
+}
+
+
+function fit_text(selection,scale,x,y){
+
+
+  if(x ==null || y == null){
+    var xt = function(x){return x};
+    var yt = function(x){return x};
+  }else{
+    var xt = x;
+    var yt = y;
+  }
+
+  selection
+    .text( function(d){
+
+      var iso = String(d.parent.parent.parent.data.key).toUpperCase()
+      var fullname = String(d.parent.parent.data.key)
+
+
+      if((getTextWidth(fullname,15,"arial") < (((xt(d.x1) - xt(d.x0))-x_padding)/scale)) && (getTextWidth("l",15,"arial") < (((yt(d.y1) - yt(d.y0))-y_padding)/scale))) {
+
+        return(fullname)
+
+      }else if((getTextWidth(iso,15,"arial") < (((xt(d.x1) - xt(d.x0))-x_padding)/scale)) && (getTextWidth("l",15,"arial") < (((yt(d.y1) - yt(d.y0))-y_padding)/scale))){
+
+
+        return(iso)
+
+      }else if((getTextWidth(iso,9,"arial") < (((xt(d.x1) - xt(d.x0))-x_padding)/scale)) && (getTextWidth("l",9,"arial") < (((yt(d.y1) - yt(d.y0))-y_padding)/scale))){
+
+        return(iso)
+
+      }
+    })
+
+    .attr("font-size",function(d){
+
+      var iso = String(d.parent.parent.parent.data.key).toUpperCase()
+
+        if((getTextWidth(iso,15,"arial") < (((xt(d.x1) - xt(d.x0))-x_padding)/scale)) && (getTextWidth("l",15,"arial") < (((yt(d.y1) - yt(d.y0))-y_padding)/scale))){
+
+          return("15px")
+        }  else{
+          return("9px")
+        }
+
+      });
+
+
+}
+
+function fit_value(selection,scale,x,y){
+
+  if(x ==null || y == null){
+    var xt = function(x){return x};
+    var yt = function(x){return x};
+  }else{
+    var xt = x;
+    var yt = y;
+  }
+
+  selection
+    .text( function(d){
+
+      var text = String(format(d.value/1000000))+"M"
+
+      if((getTextWidth(text,15,"sans-serif") < (((xt(d.x1) - xt(d.x0))-x_padding)/scale)) && (getTextWidth("a",15,"sans-serif") < (((yt(d.y1) - yt(d.y0))-1.7*y_padding)/scale))) {
+
+        return(text)
+
+      }
+    })
+
+}
+
+function accumulate(d) {
+  return d.children
+  ? d.value = d.children.reduce(function(p, v) { return p + accumulate(v); }, 0)
+  : d.value;
+  }
+
+function getTextWidth(text, fontSize, fontFace) {
+    var a = document.createElement('canvas');
+    var b = a.getContext('2d');
+    b.font = fontSize + 'px ' + fontFace;
+    return b.measureText(text).width;
+}
+
+function getTextHeigth(text, fontSize, fontFace) {
+    var a = document.createElement('canvas');
+    var b = a.getContext('2d');
+    b.font = fontSize + 'px ' + fontFace;
+    return b.measureText(text).heigth;
+}
+</script>
+
+<h2> Comments</h2>
+<p> The International Telecommunications Union (ITU, the United Nations  specialized agency for information and communication technologies) is the official source for global ICT statistics.</p>
+<p> ITU collects statistics on several ICT developments, being one of the most important indicators the one measuring "Internet users" (e.g. it is included in the Sustainable Development Goals' global indicator framework). ITU wants to draw attention to the population not yet connected by informing on questions such as: How many are they? Where are they? What is the situation today compared to five years ago?</p>
+<p>This chart is an (initial) proposal to visually present the data on non-Internet users and address the questions raised about them. Based on ITU's feedback and BGSE's (Michael Greenacre), further refinements will be made.</p>
+<p>The regional classification corresponds to that followed by ITU (UN M49). Colors have been chosen based on the Color Brewer qualitative palette that better matches <a href="http://www.itu.int/en/ITU-D/Pages/ITUAroundTheWorld.aspx">ITU's usual colors for regions</a>.</p>
+<p>The treemap proposed allows to visually see in which regions and countries most non-Internet users live. Indeed, from top to bottom and left to right, countries and regions are classified according to the absolute number of non-Internet users. The size of the treemap is proportional to the global number of non-Interent users in 2010. As a result, the animation shows graphically how the unconnected have decreased, plus changes in relative rankings within regions. For instance, Brazil was the country with most non-Internet users in the Americas in 2010, whereas in 2015 the United States was home to the largest number of non-Internet users.</p>
+<p>The labels of each cell have been customized in order to appear only when there is enough space (to avoid overcrowding). Nevertheless, the user can explore the whole data set by moving the cursor across the treemap and the underlying data for each country is displayed in a tooltip.</p>
+
+<p> The d3.js code and the underlying data (csv format) are available at my <a href="https://github.com/ivan-vallejo/Data_Visualization">GitHub account</a>. </p>
+</body>
