@@ -120,7 +120,8 @@ var margin = {top: 30, right: 20, bottom: 0, left: 30},
     data, root1, root2, duration_tips=700, duration_transitions=4000;
 
 var d2015 = false,
-    dzoom = false;
+    dzoom = false,
+    zoom_area = "General";
 
 var svg = d3.select(".chart")
 	  .append("svg")
@@ -185,6 +186,11 @@ var nest2 = d3.nest()
 
   node = root1;
 
+  // Map nodes to regionsvar color = d3.scaleOrdinal()
+  var region = d3.scaleOrdinal()
+        .domain([root1.children[0].data.key, root1.children[1].data.key, root1.children[2].data.key,root1.children[3].data.key,root1.children[4].data.key,root1.children[5].data.key],"General")
+        .range([0,1,2,3,4,5,"General"]);
+
   var ratio = Math.sqrt(root1.value/root2.value)
 
 
@@ -194,7 +200,7 @@ var nest2 = d3.nest()
     .enter().append("g")
       .attr("class", "cell")
       .attr("transform", function(d) { x= d.x0 +margin.left; y= d.y0 +margin.top; return "translate(" + x + "," + y + ")"; })
-      .on("click", function(d) {node == d.parent.parent.parent.parent ? dzoom = false : dzoom =true ;return zoom(node == d.parent.parent.parent.parent ? root1 : d.parent.parent.parent.parent); });
+      .on("click", function(d) {if(node == d.parent.parent.parent.parent){dzoom = false; zoom_area="General"} else{dzoom =true; zoom_area = region(d.parent.parent.parent.parent.data.key)};return zoom(node == d.parent.parent.parent.parent ? root1 : d.parent.parent.parent.parent); });
 
   cell.append("rect")
       .attr("id", function(d) { return d.parent.parent.parent.data.key; })
@@ -276,7 +282,7 @@ var nest2 = d3.nest()
               div.style("opacity", 0);
           });
 
-      //d3.select(window).on("click", function() { dzoom = false; zoom(root1); });
+      d3.select(window).on("click", function() { dzoom = false; zoom_area="General"; zoom(root1); });
 
 // Add legend according to selected colors
     d3.select(".chart")
@@ -309,6 +315,11 @@ var nest2 = d3.nest()
   d3.select("#d2010").attr("class","button");
   d2015 = true;
 
+  if(dzoom){
+
+    console.log(root2.children[zoom_area]);
+  }
+
   cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key})
         .transition()
         .duration(duration_transitions)
@@ -333,7 +344,7 @@ var nest2 = d3.nest()
   cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-value")
         .transition()
         .duration(duration_transitions/2)
-        .style("fill-opacity",1e-6);
+        .style("opacity",1e-6);
 
   cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-value")
         .transition()
@@ -399,7 +410,7 @@ var nest2 = d3.nest()
     cell.data(root1.leaves()).select(".node-value")
         .transition()
         .duration(duration_transitions/2)
-        .style("fill-opacity",1e-6);
+        .style("opacity",1e-6);
 
     cell.data(root1.leaves()).select(".node-value")
         .transition()
@@ -425,7 +436,7 @@ var nest2 = d3.nest()
 
 function zoom(d) {
 
-
+  console.log(zoom_area);
   var dx = d.x1-d.x0;
   var dy = d.y1-d.y0;
   var x = d3.scaleLinear()
@@ -436,9 +447,6 @@ function zoom(d) {
       .range([0, height]);
   var kx = width / dx, ky = height / dy;
 
-  //console.log([d.x0, d.x0 + dx],[d.y0, d.y0 + dy])
-  //console.log([0, width],[0, height])
-  console.log(kx, ky)
 
 
   var t = svg.selectAll("g.cell");
@@ -468,6 +476,7 @@ if(dzoom){
   t.select(".node-value")
           .style("opacity", function(d) {return (x(d.x0) < 0 || x(d.x1) > width +0.1 || y(d.y0) < 0 || y(d.y1) > height +0.1 ) ? 0 : 1; })
           .transition()
+          .delay(duration_transitions/2)
           .call(fit_value,1,x,y);
 } else{
 
@@ -625,12 +634,6 @@ function fit_value(selection,scale,x,y){
     })
 
 }
-
-function accumulate(d) {
-  return d.children
-  ? d.value = d.children.reduce(function(p, v) { return p + accumulate(v); }, 0)
-  : d.value;
-  }
 
 function getTextWidth(text, fontSize, fontFace) {
     var a = document.createElement('canvas');
