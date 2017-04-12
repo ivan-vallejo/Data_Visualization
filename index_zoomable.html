@@ -36,14 +36,10 @@ h1{
   margin-top: 1em;
 }
 svg.legend{
-
   font: 20px arial;
-
 }
 
-.node-label {
-  /*font: 15px sans-serif;*/
-}
+
 .node-value {
   font-weight: normal;
 }
@@ -305,6 +301,7 @@ var nest2 = d3.nest()
 
   cell.append("rect")
       .attr("id", function(d) { return d.parent.parent.parent.data.key; })
+      .call(cursor)
       .attr("width", function(d) {return Math.max(d.x1 - d.x0,0)*props[0][6]; })
       .attr("height", function(d) { return Math.max(d.y1 - d.y0,0)*props[0][6]; })
       .attr("fill", function(d) { return color(d.parent.parent.parent.parent.data.key); })
@@ -335,7 +332,7 @@ var nest2 = d3.nest()
 
   cell.append("text")
         .attr("class", "node-label")
-        .attr("cursor","default")
+        .call(cursor)
         .attr("dy", y_padding + "px")
         .attr("dx", x_padding + "px")
         .call(fit_text,1)
@@ -359,7 +356,7 @@ var nest2 = d3.nest()
 
   cell.append("text")
         .attr("class", "node-value")
-        .attr("cursor","default")
+        .call(cursor)
         .attr("dy", 2*y_padding + "px")
         .attr("dx", x_padding + "px")
         .call(fit_value,1)
@@ -703,6 +700,7 @@ function zoom(d, ratio) {
   t.select("rect")
           .transition()
           .duration(duration_transitions)
+          .call(cursor)
           .attr("width", function(d) {return (x(d.x1) - x(d.x0))*ratio; })
           .attr("height", function(d) { return (y(d.y1) - y(d.y0))*ratio; })
           .attr("stroke","white")
@@ -713,6 +711,7 @@ if(dzoom){
   t.select(".node-label")
       .style("opacity", function(d) {return (x(d.x0) < 0 || x(d.x1) > width +0.1 || y(d.y0) < 0 || y(d.y1) > height +0.1 ) ? 0 : 1; })
       .transition()
+      .call(cursor)
       .delay(duration_transitions/2)
       .call(fit_text,ratio,x,y);
 
@@ -720,12 +719,14 @@ if(dzoom){
   t.select(".node-value")
           .style("opacity", function(d) {return (x(d.x0) < 0 || x(d.x1) > width +0.1 || y(d.y0) < 0 || y(d.y1) > height +0.1 ) ? 0 : 1; })
           .transition()
+          .call(cursor)
           .delay(duration_transitions/2)
           .call(fit_value,ratio,x,y);
 } else{
 
   t.select(".node-label")
       .transition()
+      .call(cursor)
       .delay(duration_transitions/2)
       .call(fit_text,ratio)
       .duration(duration_transitions/2)
@@ -734,6 +735,7 @@ if(dzoom){
 
   t.select(".node-value")
       .transition()
+      .call(cursor)
       .delay(duration_transitions/2)
       .call(fit_value,ratio)
       .duration(duration_transitions/2)
@@ -782,6 +784,17 @@ function update_legend(selection, pos,text){
           .attr("y",function(d){return margin.top + 60*pos});
 
 }
+function cursor(selection){
+
+  console.log(dzoom)
+  if(dzoom){
+    selection.attr("cursor","zoom-out")
+  }else{
+    selection.attr("cursor","zoom-in")
+  }
+
+}
+
 function draw_legend(selection, pos,text, margin){
 
 
