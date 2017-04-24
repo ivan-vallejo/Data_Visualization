@@ -1,6 +1,6 @@
 
 function zoom(d, ratio) {
-// function that updates the view and dsiplays the zoom area
+// function that updates the view and displays the zoom area
   var x = d3.scaleLinear()
       .domain([d.x0, d.x1])
       .range([0, width]);
@@ -66,22 +66,21 @@ function add_stats(perusers, data2010, data2015,bool2015){
 
 	// function that adds stats to tooltip (% non users and diff across years)
 	users = parseFloat(perusers)
-  nonusers = 100-users
 
   if(bool2015){
     nums2010 = parseFloat(data2010)
     decrease = (data2015-nums2010 < 0) ? true : false
     if(decrease){
       value = d3.format(",.2r")((nums2010-data2015)/1000000)
-      return ("<small>"+ "(" + nonusers + "% population)" + "</small>" + "<br>" + "<b>" + "<font color='green'>" + value + "M" + "</font>" + "</b>" + " less than in 2010")
+      return ("<small>"+ "(" + users + "% population)" + "</small>" + "<br>" + "<b>" + "<font color='darkred'>" + value + "M" + "</font>" + "</b>" + " less than in 2010")
 
     }else{
       value = d3.format(",.2r")((data2015-nums2010)/1000000)
-      return ("<small>"+ "(" + nonusers + "% population)" + "</small>" + "<br>" + "<b>" + "<font color='darkred'>" + value + "M" + "</font>" + "</b>" + " more than in 2010")
+      return ("<small>"+ "(" + users + "% population)" + "</small>" + "<br>" + "<b>" + "<font color='green'>" + value + "M" + "</font>" + "</b>" + " more than in 2010")
     }
 
   } else {
-    return ("<small>"+ "(" + nonusers + "% population)" + "</small>")
+    return ("<small>"+ "(" + users + "% population)" + "</small>")
   }
 
 
@@ -170,7 +169,7 @@ function fit_text(selection,scale,x,y){
 
       var iso = String(d.parent.parent.parent.data.key).toUpperCase()
 
-        if((getTextWidth(iso,15,"arial") < (((xt(d.x1) - xt(d.x0))-x_padding)*scale)) && (getTextWidth("l",15,"arial") < (((yt(d.y1) - yt(d.y0))-y_padding)*scale))){
+        if((getTextWidth(iso,15,"arial") < (((xt(d.x1) - xt(d.x0))-x_padding)*scale)) && (getTextWidth("l",15,"arial") < (((yt(d.y1) - yt(d.y0))-1.2*y_padding)*scale))){
 
           return("15px")
         }  else{
@@ -180,6 +179,7 @@ function fit_text(selection,scale,x,y){
       })
 
       .attr("dy", function(d){
+
         var iso = String(d.parent.parent.parent.data.key).toUpperCase()
 
           if((getTextWidth(iso,15,"arial") < (((xt(d.x1) - xt(d.x0))-x_padding)*scale)) && (getTextWidth("l",15,"arial") < (((yt(d.y1) - yt(d.y0))-1.2*y_padding)*scale))){
@@ -189,6 +189,7 @@ function fit_text(selection,scale,x,y){
             return(y_padding*3/4 + "px")
           }
         });
+
 
 }
 
@@ -207,7 +208,7 @@ function fit_value(selection,scale,x,y){
 
       var text = String(format(d.value/1000000))+"M"
 
-      if((getTextWidth(text,15,"sans-serif") < (((xt(d.x1) - xt(d.x0))-x_padding)*scale)) && (getTextWidth("a",15,"sans-serif") < (((yt(d.y1) - yt(d.y0))-1.7*y_padding)*scale))) {
+      if((getTextWidth(text,15,"sans-serif") < (((xt(d.x1) - xt(d.x0))-x_padding)*scale)) && (getTextWidth("a",15,"sans-serif") < (((yt(d.y1) - yt(d.y0))-2*y_padding)*scale))) {
 
         return(text)
 

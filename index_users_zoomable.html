@@ -4,19 +4,19 @@
 		<meta http-equiv="content-type" content="text/html; charset=UTF8">
 		<title>Internet users - treemap </title>
     <script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
-		<script type="text/javascript" src="js/functions.js"></script>
+		<script type="text/javascript" src="js/functionsusers.js"></script>
     <link rel="stylesheet" href="css/style.css">
 	</head>
 
 
 <body>
 
-  <h1> Non-Internet users by region and country, 2010-2015 </h1>
+  <h1> Internet users by region and country, 2010-2015 </h1>
 
 <div class="btn-group">
   <button class="buttonsel" id="d2010" >2010</button>
   <button class="button" id="d2015">2015</button>
-  <div id="total"> <span id="tot"> Total </span> non-Internet users: <span id="tot_value"> </span> million</div>
+  <div id="total"> <span id="tot"> Total </span> Internet users: <span id="tot_value"> </span> million</div>
 </div>
 <br style="clear:both">
 <br>
@@ -37,7 +37,7 @@ var margin = {top: 30, right: 20, bottom: 0, left: 30},
 var d2015 = false,
     dzoom = false,
     zoom_area = 6, // 6 for general (no region)
-		zoom_area_trans = 6;
+		zoom_area_trans = 6; // 6 for general (no region)
 
 // define view area
 var svg = d3.select(".chart")
@@ -76,8 +76,8 @@ var nest1 = d3.nest()
     .key(function(d) { return d.iso; })
     .key(function(d) { return d.country; })
     .key(function(d) { return d.i99h2010; })
-    .key(function(d) { return d.data2015; })
-    .rollup(function(d) { return d3.sum(d, function(d) { return parseFloat(d.data2010); }); });
+    .key(function(d) { return d.i2015; })
+    .rollup(function(d) { return d3.sum(d, function(d) { return parseFloat(d.i2010); }); });
 
 // define hierarchy (to turn source csv flat file into a tree), 2015 data
 var nest2 = d3.nest()
@@ -85,11 +85,11 @@ var nest2 = d3.nest()
     .key(function(d) { return d.iso; })
     .key(function(d) { return d.country; })
     .key(function(d) { return d.i99h2015; })
-    .key(function(d) { return d.data2010; })
-    .rollup(function(d) { return d3.sum(d, function(d) { return parseFloat(d.data2015); }); });
+    .key(function(d) { return d.i2010; })
+    .rollup(function(d) { return d3.sum(d, function(d) { return parseFloat(d.i2015); }); });
 
 // read the data
-d3.csv("Non_Int_users.csv", function(error, csv_data) {
+d3.csv("Int_users.csv", function(error, csv_data) {
   if (error) throw error;
 
   data = csv_data;
@@ -177,22 +177,22 @@ for(j=0; j<2; j++){
   if(j==0){tmp_root = root1} else{tmp_root=root2}
   for(i=0; i<6; i++){
     switch(tmp_root.children[i].data.key){
-      case "Asia & Pacific":
+      case tmp_root.children[0].data.key:
             props[j][i] = tmp_root.children[i].value;
             break;
-      case "Africa":
+      case tmp_root.children[1].data.key:
             props[j][i] = tmp_root.children[i].value;
             break;
-      case "The Americas":
+      case tmp_root.children[2].data.key:
             props[j][i] = tmp_root.children[i].value;
             break;
-      case "Arab States":
+      case tmp_root.children[3].data.key:
             props[j][i] = tmp_root.children[i].value;
             break;
-      case "Europe":
+      case tmp_root.children[4].data.key:
             props[j][i] = tmp_root.children[i].value;
             break;
-      case "CIS":
+      case tmp_root.children[5].data.key:
             props[j][i] = tmp_root.children[i].value;
             break;
     }
@@ -208,7 +208,6 @@ tmp = Math.max(root1.value,root2.value);
 props[0][6] = Math.sqrt(root1.value/tmp);
 props[1][6] = Math.sqrt(root2.value/tmp);
 
-
 // draw initial treemap, scaling by the corresponding factor
 var cell = svg.selectAll("g")
   .data(root1.leaves())
@@ -221,7 +220,7 @@ var cell = svg.selectAll("g")
         // case 1: we are already in the zoom view, we need to zoom out
         dzoom = false;
         zoom_area=6;
-				zoom_area_trans = 6;
+				zoom_area_trans=6;
         // update text of the counter of non-Internet user (above figure)
         d3.select("#tot")
         .transition()
@@ -264,7 +263,7 @@ var cell = svg.selectAll("g")
         d3.select("#tot")
         .text(" " + d.parent.parent.parent.parent.data.key + " ");
         if(d2015){
-          // zoom-in to the selected region for 2015
+          // zoom-in to the selected region for 2015 + keep track equiv zone for transition
 					zoom_area = region2(d.parent.parent.parent.parent.data.key);
 					zoom_area_trans = region1(d.parent.parent.parent.parent.data.key)
 	        // update counter of non-Internet user (top figure)
@@ -280,7 +279,7 @@ var cell = svg.selectAll("g")
             // launch zoom function with 2015 scaling factor for the region
             return zoom(d.parent.parent.parent.parent,props[1][zoom_area])
         }else{
-          // zoom-in to the selected region for 2010
+          // zoom-in to the selected region for 2010 + keep track equiv zone for transition
 					zoom_area = region1(d.parent.parent.parent.parent.data.key);
 					zoom_area_trans = region2(d.parent.parent.parent.parent.data.key);
 	        // update counter of non-Internet user (top figure)
@@ -320,7 +319,7 @@ var cell = svg.selectAll("g")
             div.style("opacity",0)
             .style("left", (d3.event.pageX+10) + "px")
             .style("top", (d3.event.pageY - 10) + "px")
-            .html("<b>" + d.parent.parent.data.key + "</b>" + " - " + "<small>" + d.parent.parent.parent.parent.data.key + "</small>" + "<br class='long'>"  + String(format(d.value/1000000))+"M non-users " + add_stats(d.parent.data.key,d.data.key,d.value,d2015));
+            .html("<b>" + d.parent.parent.data.key + "</b>" + " - " + "<small>" + d.parent.parent.parent.parent.data.key + "</small>" + "<br class='long'>"  + String(format(d.value/1000000))+"M users " + add_stats(d.parent.data.key,d.data.key,d.value,d2015));
             // show tooltip after "duration_tips without moving"
             div.transition()
                 .delay(1000)
@@ -457,7 +456,7 @@ var cell = svg.selectAll("g")
 		zoom_area = zoom_area_trans;
 		zoom_area_trans = aux;
 		// apply rescale according to zoom
-    var x_ref = d3.scaleLinear()
+		var x_ref = d3.scaleLinear()
         .domain([ref.x0, ref.x1])
         .range([0, width]);
     var y_ref = d3.scaleLinear()
@@ -578,7 +577,6 @@ var cell = svg.selectAll("g")
 		.call(update_legend,4,root2.children[3].data.key,margin_legend)
 		.call(update_legend,5,root2.children[4].data.key,margin_legend)
 		.call(update_legend,6,root2.children[5].data.key,margin_legend);
-
 
   });
   // if user clicks on 2010 button, transition to 2010 data
@@ -717,6 +715,7 @@ var cell = svg.selectAll("g")
 		.call(update_legend,4,root1.children[3].data.key,margin_legend)
 		.call(update_legend,5,root1.children[4].data.key,margin_legend)
 		.call(update_legend,6,root1.children[5].data.key,margin_legend);
+
 
   });
 });
