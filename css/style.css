@@ -6,8 +6,28 @@ svg {
   font: 10px arial;
 }
 
+a.btn {
+    color: inherit;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+a{
+  color:blue;
+}
+
 body {
   font: 15px arial;
+}
+
+h2{
+  margin-left: 1em;
+  font-size: 28px;
+  font-family:"Segoe UI",Arial,sans-serif;
+  font-weight:400;}.w3-wide{letter-spacing:4px}
+
+p{
+  margin-left: 1em;
 }
 
 div.tooltip {
@@ -31,7 +51,10 @@ br.long {
 h1{
   margin-left: 1em;
   margin-top: 1em;
-}
+  font-size: 36px;
+  font-family:"Segoe UI",Arial,sans-serif;
+  font-weight:400;}.w3-wide{letter-spacing:4px}
+
 svg.legend{
   font: 20px arial;
 }
