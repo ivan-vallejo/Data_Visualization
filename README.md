@@ -1,6 +1,7 @@
-# Data visualization - <a href="https://ivan-vallejo.github.io/Data_Visualization/">https://ivan-vallejo.github.io/Data_Visualization/</a>
+# Data visualization
 ## Project for the Barcelona Graduate School of Economics based on data from the International Telecommunication Union on Internet users worldwide
- 
+
+### <a href="https://ivan-vallejo.github.io/Data_Visualization/">https://ivan-vallejo.github.io/Data_Visualization/</a> 
 #### (better seen in Chrome)
 
 <p> ITU collects statistics on several ICT developments, being one of the most important indicators the one measuring "Internet users" (e.g. it is included in the Sustainable Development Goals' global indicator framework). ITU wants to draw attention to the population not yet connected by informing on questions such as: How many are they? Where are they? What is the situation today compared to five years ago?</p>
