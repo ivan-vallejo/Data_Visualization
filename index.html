@@ -1,150 +1,84 @@
 <!DOCTYPE html>
-<style>
+<html lang="en">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF8">
+		<title>Internet users - treemap </title>
+    <script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
+		<script type="text/javascript" src="js/functions.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+		<link rel="stylesheet" href="css/w3.css">
+	</head>
 
-form {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-svg {
-  font: 10px arial;
-}
-
-body {
-  font: 15px arial;
-}
-
-div.tooltip {
-  position: absolute;
-  width: auto;
-  height: auto;
-  padding: 10px;
-  background-color: white;
-  -webkit-border-radius: 10px;
-  -moz-border-radius: 10px;
-  border-radius: 10px;
-  -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
-  -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
-  pointer-events: none;
-}
-br.long {
-       line-height: 150%;
-    }
-
-h1{
-  margin-left: 1em;
-  margin-top: 1em;
-}
-svg.legend{
-
-  font: 20px arial;
-
-}
-
-.node-label {
-  /*font: 15px sans-serif;*/
-}
-.node-value {
-  font-weight: normal;
-}
-
-.btn-group{
-  margin-left: 3em;
-  margin-top: 3em;
-}
-.btn-group .button {
-    background-color: #4CAF50; /* Green */
-    border: none;
-    color: white;
-    padding: 15px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    cursor: pointer;
-    float: left;
-}
-
-.btn-group .button:hover {
-    background-color: #3e8e41;
-}
-
-.btn-group .buttonsel:hover {
-    background-color: #3e8e41;
-}
-
-#total{
-  padding-top: 10px;
-  text-indent: 100px;
-  font-weight: normal;
-  font-size: 20px;
-}
-
-.btn-group .buttonsel {
-  background-color: #4CAF55; /* Green */
-  border: 5px solid black;
-  color: white;
-  padding: 10px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  cursor: pointer;
-  float: left;
-}
-
-
-</style>
-
-<script src="https://d3js.org/d3.v4.min.js"></script>
 
 <body>
+
+	<div class="w3-bar w3-black">
+	  <button class="w3-bar-item w3-button w3-green">
+		<a class="btn"> Non-Internet users</a></button>
+		<button class="w3-bar-item w3-button">
+		<a class="btn" href="treemaps2.html">Internet users</a></button>
+</div>
+
   <h1> Non-Internet users by region and country, 2010-2015 </h1>
 
 <div class="btn-group">
   <button class="buttonsel" id="d2010" >2010</button>
   <button class="button" id="d2015">2015</button>
-  <div id="total"> Total non-Internet users: <span id="tot_value"> </span> million</div>
+  <div id="total"> <span id="tot"> Total </span> non-Internet users: <span id="tot_value"> </span> million</div>
 </div>
 <br style="clear:both">
 <br>
+
 <div class="chart">
 </div>
 
 <script>
-
+// define margins, chart size, transition length and waiting time for tooltips to pop
 var margin = {top: 30, right: 20, bottom: 0, left: 30},
     margin_legend = {top: 30, left: 70},
     width = 800,
     height = 450,
+    stroke = 1,
     data, root1, root2, duration_tips=700, duration_transitions=4000;
 
-var d2015 = false;
+// create variables to keep track on the status of current view: year, zoom and zoomed region
+var d2015 = false,
+    dzoom = false,
+    zoom_area = 6, // 6 for general (no region)
+		zoom_area_trans = 6;
 
+// define view area
 var svg = d3.select(".chart")
 	  .append("svg")
 		.attr("width", width + margin.left + margin.right)
 		.attr("height", height + margin.top + margin.bottom)
 
+// define color mapping for each region
 var color = d3.scaleOrdinal()
       .domain(["Asia & Pacific", "Africa", "Arab States","The Americas","Europe","CIS"])
       .range(["#e78ac3", "#a6d854" , "#ffd92f","#fc8d62","#66c2a5","#8da0cb"]);
 
+// deinfe format numbers displayed
 var format = d3.format(",.2r")
     format2 = d3.format(",.3r")
     x_padding = 2
     y_padding = 15;
 
+// define characteristics treemap
 var treemap = d3.treemap()
     .tile(d3.treemapResquarify)
     .size([width, height])
-    .round(true)
-    .paddingInner(1);
+    .round(false)
+    .paddingLeft(0)
+    .paddingRight(0)
+    .paddingInner(0);
 
+// define tooltip box
 var div = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
 
+// define hierarchy (to turn source csv flat file into a tree), 2010 data
 var nest1 = d3.nest()
     .key(function(d) { return d.region; })
     .key(function(d) { return d.iso; })
@@ -153,6 +87,7 @@ var nest1 = d3.nest()
     .key(function(d) { return d.data2015; })
     .rollup(function(d) { return d3.sum(d, function(d) { return parseFloat(d.data2010); }); });
 
+// define hierarchy (to turn source csv flat file into a tree), 2015 data
 var nest2 = d3.nest()
     .key(function(d) { return d.region; })
     .key(function(d) { return d.iso; })
@@ -161,50 +96,240 @@ var nest2 = d3.nest()
     .key(function(d) { return d.data2010; })
     .rollup(function(d) { return d3.sum(d, function(d) { return parseFloat(d.data2015); }); });
 
+// read the data
+d3.csv("Non_Int_users.csv", function(error, csv_data) {
+  if (error) throw error;
 
-    d3.csv("Non_Int_users.csv", function(error, csv_data) {
-      if (error) throw error;
+  data = csv_data;
 
-      data = csv_data;
+// create hierarchies from the data
+var root1 = d3.hierarchy({values: nest1.entries(data)}, function(d) { return d.values; })
+    .sum(function(d) { return d.value; })
+    .sort(function(a, b) { return b.value - a.value; });
 
-      var root1 = d3.hierarchy({values: nest1.entries(data)}, function(d) { return d.values; })
-          .sum(function(d) { return d.value; })
-          .sort(function(a, b) { return b.value - a.value; });
+var root2 = d3.hierarchy({values: nest2.entries(data)}, function(d) { return d.values; })
+    .sum(function(d) { return d.value; })
+    .sort(function(a, b) { return b.value - a.value; });
 
-      var root2 = d3.hierarchy({values: nest2.entries(data)}, function(d) { return d.values; })
-          .sum(function(d) { return d.value; })
-          .sort(function(a, b) { return b.value - a.value; });
+// create trees
+treemap(root1);
+treemap(root2);
 
-  treemap(root1);
-  treemap(root2);
+node = root1;
 
-  console.log(root1,root2)
+// Map nodes to regions to keep track of zooming region
+var regs = [];
+for(i=0;i<6;i++){
+	switch (root1.children[i].data.key) {
+		case root1.children[0].data.key:
+					regs[0] = i;
+					break;
+		case root1.children[1].data.key:
+					regs[1] = i;
+					break;
+		case root1.children[2].data.key:
+					regs[2] = i;
+					break;
+		case root1.children[3].data.key:
+					regs[3] = i;
+					break;
+		case root1.children[4].data.key:
+					regs[4] = i;
+					break;
+		case root1.children[5].data.key:
+					regs[5] = i;
+					break;
+	}
+}
+regs[6]=6;
+var region1 = d3.scaleOrdinal()
+      .domain([root1.children[0].data.key, root1.children[1].data.key, root1.children[2].data.key,root1.children[3].data.key,root1.children[4].data.key,root1.children[5].data.key],"General")
+      .range(regs);
 
-  var ratio = Math.sqrt(root1.value/root2.value)
+// In this case order is the same in 2010 and 2015 so there is no need to have two separate mappings, but added 2nd variable to make it more general so that it will work with data with changing relative positions between 2010 and 2015
+for(i=0;i<6;i++){
+	switch (root2.children[i].data.key) {
+		case root2.children[0].data.key:
+					regs[0] = i;
+					break;
+		case root2.children[1].data.key:
+					regs[1] = i;
+					break;
+		case root2.children[2].data.key:
+					regs[2] = i;
+					break;
+		case root2.children[3].data.key:
+					regs[3] = i;
+					break;
+		case root2.children[4].data.key:
+					regs[4] = i;
+					break;
+		case root2.children[5].data.key:
+					regs[5] = i;
+					break;
+	}
+}
+regs[6]=6;
+
+var region2 = d3.scaleOrdinal()
+      .domain([root2.children[0].data.key, root2.children[1].data.key, root2.children[2].data.key,root2.children[3].data.key,root2.children[4].data.key,root2.children[5].data.key],"General")
+      .range(regs);
 
 
+// Calculate scale of the treemap to show in all regions 2010 & 2015:
+//for the totals, take as 1 2010, and shrink proportionally in 2015.
+// For regions, take the highest value in the region (usually 2010) as 1
+// and shrink proportionally
+var props= [[],[]];
+for(j=0; j<2; j++){
+  if(j==0){tmp_root = root1} else{tmp_root=root2}
+  for(i=0; i<6; i++){
+    switch(tmp_root.children[i].data.key){
+      case "Asia & Pacific":
+            props[j][i] = tmp_root.children[i].value;
+            break;
+      case "Africa":
+            props[j][i] = tmp_root.children[i].value;
+            break;
+      case "The Americas":
+            props[j][i] = tmp_root.children[i].value;
+            break;
+      case "Arab States":
+            props[j][i] = tmp_root.children[i].value;
+            break;
+      case "Europe":
+            props[j][i] = tmp_root.children[i].value;
+            break;
+      case "CIS":
+            props[j][i] = tmp_root.children[i].value;
+            break;
+    }
+  }
+  }
+  for(i=0; i<6; i++){
+    tmp = Math.max(props[0][i],props[1][i])
+    props[0][i] = Math.sqrt(props[0][i]/tmp)
+    props[1][i] = Math.sqrt(props[1][i]/tmp)
+  }
+// add general case
+tmp = Math.max(root1.value,root2.value);
+props[0][6] = Math.sqrt(root1.value/tmp);
+props[1][6] = Math.sqrt(root2.value/tmp);
 
-  var cell = svg.selectAll("g")
-    .data(root1.leaves())
-    .enter().append("g")
-      .attr("transform", function(d) { x= d.x0 +margin.left; y= d.y0 +margin.left; return "translate(" + x + "," + y + ")"; });
 
+// draw initial treemap, scaling by the corresponding factor
+var cell = svg.selectAll("g")
+  .data(root1.leaves())
+  .enter().append("g")
+    .attr("class", "cell")
+    .attr("transform", function(d) { x= d.x0*props[0][6] +margin.left; y= d.y0*props[0][6] +margin.top; return "translate(" + x + "," + y + ")"; })
+    // if user clicks on the treemap, launch zoom function
+    .on("click", function(d) {
+      if(dzoom){
+        // case 1: we are already in the zoom view, we need to zoom out
+        dzoom = false;
+        zoom_area=6;
+				zoom_area_trans = 6;
+        // update text of the counter of non-Internet user (above figure)
+        d3.select("#tot")
+        .transition()
+        .delay(duration_transitions/2)
+        .text(" Total ");
+        // zoom-out to totals for 2015, since we are showing 2015
+        if(d2015){
+          // update counter of non-Internet user (above figure)
+          d3.select("#tot_value")
+            .transition()
+            .duration(duration_transitions)
+            .tween("text", function(g) {
+                var i = d3.interpolate(d.parent.parent.parent.parent.value/1000000, root2.value/1000000);
+                return function(t) {
+                  d3.select("#tot_value").text(format2(i(t)));
+                };
+            });
+            // launch zoom function with 2015 total scaling factor
+            return zoom(root2,props[1][6])
+        }
+        // zoom-out to totals for 2010, since we are showing 2010
+        else{
+          // update counter of non-Internet user (top figure)
+          d3.select("#tot_value")
+            .transition()
+            .duration(duration_transitions)
+            .tween("text", function(g) {
+                var i = d3.interpolate(d.parent.parent.parent.parent.value/1000000, root1.value/1000000);
+                return function(t) {
+                  d3.select("#tot_value").text(format2(i(t)));
+                };
+            });
+            // launch zoom function with 2015 total scaling factor
+            return zoom(root1,props[0][6])
+        }
+      } else{
+        // case 2: we are in the general view, we need to zoom in
+        dzoom =true;
+        // update text of the counter of non-Internet user (above figure)
+        d3.select("#tot")
+        .text(" " + d.parent.parent.parent.parent.data.key + " ");
+        if(d2015){
+          // zoom-in to the selected region for 2015
+					zoom_area = region2(d.parent.parent.parent.parent.data.key);
+					zoom_area_trans = region1(d.parent.parent.parent.parent.data.key)
+	        // update counter of non-Internet user (top figure)
+            d3.select("#tot_value")
+            .transition()
+            .duration(duration_transitions)
+            .tween("text", function(g) {
+                var i = d3.interpolate(root2.value/1000000,d.parent.parent.parent.parent.value/1000000);
+                return function(t) {
+                  d3.select("#tot_value").text(format2(i(t)));
+                };
+            });
+            // launch zoom function with 2015 scaling factor for the region
+            return zoom(d.parent.parent.parent.parent,props[1][zoom_area])
+        }else{
+          // zoom-in to the selected region for 2010
+					zoom_area = region1(d.parent.parent.parent.parent.data.key);
+					zoom_area_trans = region2(d.parent.parent.parent.parent.data.key);
+	        // update counter of non-Internet user (top figure)
+          d3.select("#tot_value")
+            .transition()
+            .duration(duration_transitions)
+            .tween("text", function(g) {
+                var i = d3.interpolate(root1.value/1000000,d.parent.parent.parent.parent.value/1000000);
+
+                return function(t) {
+                  d3.select("#tot_value").text(format2(i(t)));
+                };
+
+              });
+            // launch zoom function with 2015 scaling factor for the region
+            return zoom(d.parent.parent.parent.parent,props[0][zoom_area])
+        }
+      };
+    });
+
+  // draw treemap rectangles
   cell.append("rect")
       .attr("id", function(d) { return d.parent.parent.parent.data.key; })
-      .attr("width", function(d) { return d.x1 - d.x0; })
-      .attr("height", function(d) { return d.y1 - d.y0; })
-      .attr("fill", function(d) { return color(d.parent.parent.parent.parent.data.key); })
+      .call(cursor) // show cursor as a +/- lens depending on the current view
+      .attr("width", function(d) {return Math.max(d.x1 - d.x0,0)*props[0][6]; })
+      .attr("height", function(d) { return Math.max(d.y1 - d.y0,0)*props[0][6]; })
+      .attr("fill", function(d) { return color(d.parent.parent.parent.parent.data.key); }) // color according to color map
+      .attr("stroke","white")
+      .attr("stroke-width",stroke)
       .on("mouseover", function(d) {
             div.transition();
             div.style("opacity", 0);
         })
       .on("mousemove", function(d) {
+            // prepare tooltip
             div.transition();
             div.style("opacity",0)
             .style("left", (d3.event.pageX+10) + "px")
             .style("top", (d3.event.pageY - 10) + "px")
             .html("<b>" + d.parent.parent.data.key + "</b>" + " - " + "<small>" + d.parent.parent.parent.parent.data.key + "</small>" + "<br class='long'>"  + String(format(d.value/1000000))+"M non-users " + add_stats(d.parent.data.key,d.data.key,d.value,d2015));
-
+            // show tooltip after "duration_tips without moving"
             div.transition()
                 .delay(1000)
                 .duration(duration_tips)
@@ -217,19 +342,18 @@ var nest2 = d3.nest()
             div.style("opacity", 0);
         });
 
+  // write country names on the treemap if there is enough space
   cell.append("text")
         .attr("class", "node-label")
-        .attr("x", function(d) { return d.dx; })
-        .attr("y", function(d) { return d.dy; })
-        .attr("cursor","default")
-        .attr("dy", y_padding + "px")
+        .call(cursor)
         .attr("dx", x_padding + "px")
-        .call(fit_text,1)
+        .call(fit_text,props[0][6]) // format names according space
         .on("mouseover", function(d) {
               div.style("opacity", 0);
           })
         .on("mousemove", function(d) {
-              div.style("opacity",0)
+            // prepare & show tooltip also if we are poimting at the text
+            div.style("opacity",0)
               .style("left", (d3.event.pageX+10) + "px")
               .style("top", (d3.event.pageY - 10) + "px")
               .html("<b>" + d.parent.parent.data.key + "</b>" + " - " + "<small>" + d.parent.parent.parent.parent.data.key + "</small>" + "<br class='long'>"  + String(format(d.value/1000000))+"M non-users " + add_stats(d.parent.data.key,d.data.key,d.value,d2015));
@@ -243,19 +367,19 @@ var nest2 = d3.nest()
               div.style("opacity", 0);
           });
 
+  // write figures non-Internet in the rectangle if enough space
   cell.append("text")
         .attr("class", "node-value")
-        .attr("cursor","default")
-        .attr("x", function(d) { return d.dx; })
-        .attr("y", function(d) { return d.dy; })
+        .call(cursor)
         .attr("dy", 2*y_padding + "px")
         .attr("dx", x_padding + "px")
-        .call(fit_value,1)
+        .call(fit_value,props[0][6]) // format values according to space
         .on("mouseover", function(d) {
               div.style("opacity", 0);
           })
         .on("mousemove", function(d) {
-              div.style("opacity",0)
+            // prepare & show tooltip also if we are poimting at the label
+            div.style("opacity",0)
               .style("left", (d3.event.pageX+10) + "px")
               .style("top", (d3.event.pageY - 10) + "px")
               .html("<b>" + d.parent.parent.data.key + "</b>" + " - " + "<small>" + d.parent.parent.parent.parent.data.key + "</small>" + "<br class='long'>"  + String(format(d.value/1000000))+"M non-users " + add_stats(d.parent.data.key,d.data.key,d.value,d2015));
@@ -268,6 +392,42 @@ var nest2 = d3.nest()
         .on("mouseout", function(d) {
               div.style("opacity", 0);
           });
+
+      // if user clicks outside the tree while in zoom, go back to general view
+      d3.select(window).on("click", function() {
+        if(dzoom==true){
+          dzoom= false;
+          zoom_area=6;
+					zoom_area_trans=6;
+          d3.select("#tot")
+            .transition()
+            .delay(duration_transitions/2)
+            .text(" Total ");
+          if(d2015){
+            d3.select("#tot_value")
+              .transition()
+              .duration(duration_transitions)
+              .tween("text", function(g) {
+                  var i = d3.interpolate(parseFloat(d3.select("#tot_value").text().replace(/,/g,'')), root2.value/1000000);
+                  return function(t) {
+                    d3.select("#tot_value").text(format2(i(t)));
+                  };
+              });
+            zoom(root1, props[1][zoom_area]);
+        } else{
+          d3.select("#tot_value")
+            .transition()
+            .duration(duration_transitions)
+            .tween("text", function(g) {
+                var i = d3.interpolate(parseFloat(d3.select("#tot_value").text().replace(/,/g,'')), root1.value/1000000);
+                return function(t) {
+                  d3.select("#tot_value").text(format2(i(t)));
+                };
+            });
+          zoom(root1, props[0][zoom_area]);
+        }
+      }
+         });
 
 // Add legend according to selected colors
     d3.select(".chart")
@@ -275,10 +435,7 @@ var nest2 = d3.nest()
         .attr("class","legend")
     		.attr("width", "300")
     		.attr("height", height+ margin.top + margin.bottom);
-
     legend = d3.select("svg.legend");
-
-
     // Rank regions per non-users and draw legend from + to -
     legend
       .call(draw_legend,1,root1.children[0].data.key,margin_legend)
@@ -287,278 +444,301 @@ var nest2 = d3.nest()
       .call(draw_legend,4,root1.children[3].data.key,margin_legend)
       .call(draw_legend,5,root1.children[4].data.key,margin_legend)
       .call(draw_legend,6,root1.children[5].data.key,margin_legend);
-// Legend drawn
 
-    // Write total figure at the top
+    // Write initial total figure at the top
     d3.select("#tot_value")
-      .text(String(format(root1.value/1000000)));
+      .text(String(format2(root1.value/1000000)));
 
+  // if user clicks on 2015 button, transition to 2015 data
   d3.select("#d2015").on("click", function() {
 
-
+  //update buttons' shadow
   d3.select("#d2015").attr("class","buttonsel");
   d3.select("#d2010").attr("class","button");
-  d2015 = true;
 
-  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key})
+  if(dzoom && d2015 == false){
+    // case 1: we are in zoom view, need to transition to 2015 zoom of the selected region
+		d2015 = true;
+		ref = root2.children[zoom_area_trans];
+		// update zoom areas (applies if the order of the two trees is different)
+		aux = zoom_area;
+		zoom_area = zoom_area_trans;
+		zoom_area_trans = aux;
+		// apply rescale according to zoom
+    var x_ref = d3.scaleLinear()
+        .domain([ref.x0, ref.x1])
+        .range([0, width]);
+    var y_ref = d3.scaleLinear()
+        .domain([ref.y0, ref.y1])
+        .range([0, height]);
+
+    // recalculate tree using 2015 data and scaling factor for the given region
+    cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key})
+          .transition()
+          .duration(duration_transitions)
+          .attr("transform", function(d) { x= x_ref(d.x0)*props[1][zoom_area] +margin.left; y= y_ref(d.y0)*props[1][zoom_area] +margin.top; return "translate(" + x + "," + y + ")"; });
+
+    // update rectangles
+    cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select("rect")
         .transition()
         .duration(duration_transitions)
-        .attr("transform", function(d) { x= d.x0/ratio +margin.left; y= d.y0/ratio +margin.left; return "translate(" + x + "," + y + ")"; });
+        .attr("width", function(d) {return (x_ref(d.x1) - x_ref(d.x0))*props[1][zoom_area]; })
+        .attr("height", function(d) { return (y_ref(d.y1) - y_ref(d.y0))*props[1][zoom_area]; })
+        .attr("stroke","white")
+        .attr("stroke-width",stroke)
+        // do not show those rectangles of other regions
+        .style("opacity", function(d) {return (x_ref(d.x0) < 0 || x_ref(d.x1) > width+0.1 || y_ref(d.y0) < 0 || y_ref(d.y1) > height+0.1 ) ? 0 : 1; });
 
+    // update country names in rectangles
+    cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-label")
+          // hide those country names of other regions
+          .style("opacity", function(d) {return (x_ref(d.x0) < 0 || x_ref(d.x1) > width +0.1 || y_ref(d.y0) < 0 || y_ref(d.y1) > height +0.1 ) ? 0 : 1; })
+          .transition()
+          .delay(duration_transitions/2)
+          .call(fit_text,props[1][6],x_ref,y_ref);
 
-  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select("rect")
-      .transition()
-      .duration(duration_transitions)
-      .attr("width", function(d) { return (d.x1 - d.x0)/ratio; })
-      .attr("height", function(d) { return (d.y1 - d.y0)/ratio; })
-      .attr("stroke","white")
-      .attr("stroke-width","0.5");
+    // update country values in rectangles
+    cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-value")
+          // hide those country values of other regions
+          .style("opacity", function(d) {return (x_ref(d.x0) < 0 || x_ref(d.x1) > width +0.1 || y_ref(d.y0) < 0 || y_ref(d.y1) > height +0.1 ) ? 0 : 1; })
+          .transition()
+          .delay(duration_transitions/2)
+          .call(fit_value,props[1][6],x_ref,y_ref);
 
-
-  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-label")
-        .transition()
-        .delay(duration_transitions/2)
-        .attr("opacity",1)
-        .call(fit_text,ratio);
-
-  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-value")
-        .transition()
-        .duration(duration_transitions/2)
-        .style("fill-opacity",1e-6);
-
-  cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-value")
-        .transition()
-        .delay(duration_transitions/2)
-        .call(fit_value,ratio)
-        .duration(duration_transitions/2)
-        .style("fill-opacity",1);
-
-    // Update legend
-    legend2 = d3.select("svg.legend");
-
-    // Rank regions per non-users and draw legend from + to -
-    legend2
-      .transition()
-      .duration(duration_transitions)
-      .call(update_legend,1,root2.children[0].data.key,margin_legend)
-      .call(update_legend,2,root2.children[1].data.key,margin_legend)
-      .call(update_legend,3,root2.children[2].data.key,margin_legend)
-      .call(update_legend,4,root2.children[3].data.key,margin_legend)
-      .call(update_legend,5,root2.children[4].data.key,margin_legend)
-      .call(update_legend,6,root2.children[5].data.key,margin_legend);
-
+    // update counter of non-Internet users at the top according to 2015 data
     d3.select("#tot_value")
       .transition()
       .duration(duration_transitions)
-      .tween("text", function(d) {
-          var i = d3.interpolate(root1.value/1000000, root2.value/1000000);
-
+      .tween("text", function(g) {
+          var i =   d3.interpolate(parseFloat(d3.select("#tot_value").text().replace(/,/g,'')), root2.children[zoom_area].value/1000000);
           return function(t) {
             d3.select("#tot_value").text(format2(i(t)));
           };
       });
 
+    node = ref;
+    d3.event.stopPropagation();
+
+  }else if(d2015 == false){
+
+    // case 2: we are in general view, need to transition to 2015 general view
+    // recalculate tree using 2015 data and scaling factor for general view
+		d2015 = true;
+    cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key})
+          .transition()
+          .duration(duration_transitions)
+          .attr("transform", function(d) { x= d.x0*props[1][6] +margin.left; y= d.y0*props[1][6] +margin.top; return "translate(" + x + "," + y + ")"; });
+
+      //update rectangles
+      cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select("rect")
+          .transition()
+          .duration(duration_transitions)
+          .attr("width", function(d) { return (d.x1 - d.x0)*props[1][6]; })
+          .attr("height", function(d) { return (d.y1 - d.y0)*props[1][6]; })
+          .attr("stroke","white")
+          .attr("stroke-width","0.5");
+
+      // update country names in rectangles
+      cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-label")
+            .transition()
+            .delay(duration_transitions/2)
+            .attr("opacity",1)
+            .call(fit_text,props[1][6]);
+
+    // update country values in rectangles
+    cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-value")
+          .transition()
+          .duration(duration_transitions/2)
+          .style("opacity",1e-6);
+
+    cell.data(root2.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-value")
+          .transition()
+          .delay(duration_transitions/2)
+          .call(fit_value,props[1][6])
+          .duration(duration_transitions/2)
+          .style("opacity",1);
+
+    d3.event.stopPropagation();
+
+      // update counter
+      d3.select("#tot_value")
+        .transition()
+        .duration(duration_transitions)
+        .tween("text", function(d) {
+            var i = d3.interpolate(root1.value/1000000, root2.value/1000000);
+            return function(t) {
+              d3.select("#tot_value").text(format2(i(t)));
+            };
+        });
+
+  }
+
+	// Update legend
+	legend2 = d3.select("svg.legend");
+
+	// Rank regions per non-users and draw legend from + to -
+	legend2
+		.transition()
+		.duration(duration_transitions)
+		.call(update_legend,1,root2.children[0].data.key,margin_legend)
+		.call(update_legend,2,root2.children[1].data.key,margin_legend)
+		.call(update_legend,3,root2.children[2].data.key,margin_legend)
+		.call(update_legend,4,root2.children[3].data.key,margin_legend)
+		.call(update_legend,5,root2.children[4].data.key,margin_legend)
+		.call(update_legend,6,root2.children[5].data.key,margin_legend);
 
 
   });
-
+  // if user clicks on 2010 button, transition to 2010 data
   d3.select("#d2010").on("click", function() {
 
-
+  //update buttons' shadow
   d3.select("#d2015").attr("class","button");
   d3.select("#d2010").attr("class","buttonsel");
-  d2015 = false;
 
+  if(dzoom && d2015 == true){
+    // case 1: we are in zoom view, need to transition to 2010 zoom of the selected region
+		d2015 = false;
+    ref = root1.children[zoom_area_trans];
+		// update zoom areas (applies if the order of the two trees is different)
+		aux = zoom_area;
+		zoom_area = zoom_area_trans;
+		zoom_area_trans = aux;
+		// apply rescale according to zoom
+    var x1_ref = d3.scaleLinear()
+        .domain([ref.x0, ref.x1])
+        .range([0, width]);
+    var y1_ref = d3.scaleLinear()
+        .domain([ref.y0, ref.y1])
+        .range([0, height]);
+
+    // recalculate tree using 2010 data and scaling factor for the given region
+    cell.data(root1.leaves(),function(d){return d.parent.parent.parent.data.key})
+          .transition()
+          .duration(duration_transitions)
+          .attr("transform", function(d) { x= x1_ref(d.x0)*props[0][zoom_area] +margin.left; y= y1_ref(d.y0)*props[0][zoom_area] +margin.top; return "translate(" + x + "," + y + ")"; });
+
+    // update rectangles
+    cell.data(root1.leaves(),function(d){return d.parent.parent.parent.data.key}).select("rect")
+        .transition()
+        .duration(duration_transitions)
+        .attr("width", function(d) {return (x1_ref(d.x1) - x1_ref(d.x0))*props[0][zoom_area]; })
+        .attr("height", function(d) { return (y1_ref(d.y1) - y1_ref(d.y0))*props[0][zoom_area]; })
+        .attr("stroke","white")
+        .attr("stroke-width",stroke)
+        // do not show those rectangles of other regions
+        .style("opacity", function(d) {return (x1_ref(d.x0) < 0 || x1_ref(d.x1) > width+0.1 || y1_ref(d.y0) < 0 || y1_ref(d.y1) > height+0.1 ) ? 0 : 1; });
+
+    // update country names in rectangles
+    cell.data(root1.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-label")
+          // hide those country names of other regions
+          .style("opacity", function(d) {return (x1_ref(d.x0) < 0 || x1_ref(d.x1) > width +0.1 || y1_ref(d.y0) < 0 || y1_ref(d.y1) > height +0.1 ) ? 0 : 1; })
+          .transition()
+          .delay(duration_transitions/2)
+          .call(fit_text,props[0][6],x1_ref,y1_ref);
+
+    // update country values in rectangles
+    cell.data(root1.leaves(),function(d){return d.parent.parent.parent.data.key}).select(".node-value")
+          // hide those country values of other regions
+          .style("opacity", function(d) {return (x1_ref(d.x0) < 0 || x1_ref(d.x1) > width +0.1 || y1_ref(d.y0) < 0 || y1_ref(d.y1) > height +0.1 ) ? 0 : 1; })
+          .transition()
+          .delay(duration_transitions/2)
+          .call(fit_value,props[0][6],x1_ref,y1_ref);
+
+    // update counter of non-Internet users at the top according to 2015 data
+    d3.select("#tot_value")
+      .transition()
+      .duration(duration_transitions)
+      .tween("text", function(g) {
+          var i = d3.interpolate(parseFloat(d3.select("#tot_value").text().replace(/,/g,'')), root1.children[zoom_area].value/1000000);
+          return function(t) {
+            d3.select("#tot_value").text(format2(i(t)));
+          };
+      });
+
+    node = ref;
+    d3.event.stopPropagation();
+
+  }else if(d2015 == true){
+
+  // case 2: we are in general view, need to transition to 2010 general view
+  // recalculate tree using 2010 data and scaling factor for general view
+	d2015 = false;
   cell.data(root1.leaves())
         .transition()
         .duration(duration_transitions)
-        .attr("transform", function(d) { x= d.x0 +margin.left; y= d.y0 +margin.left; return "translate(" + x + "," + y + ")"; });
+        .attr("transform", function(d) { x= d.x0*props[0][6] +margin.left; y= d.y0*props[0][6] +margin.top; return "translate(" + x + "," + y + ")"; });
 
+  //update rectangles
   cell.data(root1.leaves()).select("rect")
       .transition()
       .duration(duration_transitions)
-      .attr("width", function(d) { return d.x1 - d.x0; })
-      .attr("height", function(d) { return d.y1 - d.y0; })
+      .attr("width", function(d) { return Math.max(d.x1 - d.x0,0)*props[0][6]; })
+      .attr("height", function(d) { return Math.max(d.y1 - d.y0,0)*props[0][6]; })
       .attr("stroke","white")
-      .attr("stroke-width","0.5");
+      .attr("stroke-width",stroke);
 
+  // update country names in rectangles
   cell.data(root1.leaves()).select(".node-label")
         .transition()
         .delay(duration_transitions/2)
-        .call(fit_text,1);
+        .call(fit_text,props[0][6]);
 
+    // update country values in rectangles
     cell.data(root1.leaves()).select(".node-value")
         .transition()
         .duration(duration_transitions/2)
-        .style("fill-opacity",1e-6);
+        .style("opacity",1e-6);
 
     cell.data(root1.leaves()).select(".node-value")
         .transition()
         .delay(duration_transitions/2)
-        .call(fit_value,1)
+        .call(fit_value,props[0][6])
         .duration(duration_transitions/2)
-        .style("fill-opacity",1);
+        .style("opacity",props[0][6]);
 
+    d3.event.stopPropagation();
+
+      // update counter
         d3.select("#tot_value")
           .transition()
           .duration(duration_transitions)
           .tween("text", function(d) {
               var i = d3.interpolate(root2.value/1000000, root1.value/1000000);
-
               return function(t) {
                 d3.select("#tot_value").text(format2(i(t)));
               };
           });
 
+  }
+
+	// Update legend
+	legend1 = d3.select("svg.legend");
+
+	// Rank regions per non-users and draw legend from + to -
+	legend1
+		.transition()
+		.duration(duration_transitions)
+		.call(update_legend,1,root1.children[0].data.key,margin_legend)
+		.call(update_legend,2,root1.children[1].data.key,margin_legend)
+		.call(update_legend,3,root1.children[2].data.key,margin_legend)
+		.call(update_legend,4,root1.children[3].data.key,margin_legend)
+		.call(update_legend,5,root1.children[4].data.key,margin_legend)
+		.call(update_legend,6,root1.children[5].data.key,margin_legend);
 
   });
 });
 
-function add_stats(perusers, data2010, data2015,bool2015){
-  users = parseFloat(perusers)
-  nonusers = 100-users
-
-  if(bool2015){
-    nums2010 = parseFloat(data2010)
-    decrease = (data2015-nums2010 < 0) ? true : false
-    if(decrease){
-      value = d3.format(",.2r")((nums2010-data2015)/1000000)
-      return ("<small>"+ "(" + nonusers + "% population)" + "</small>" + "<br>" + "<b>" + "<font color='green'>" + value + "M" + "</font>" + "</b>" + " less than in 2010")
-
-    }else{
-      value = d3.format(",.2r")((data2015-nums2010)/1000000)
-      return ("<small>"+ "(" + nonusers + "% population)" + "</small>" + "<br>" + "<b>" + "<font color='darkred'>" + value + "M" + "</font>" + "</b>" + " more than in 2010")
-    }
-
-  } else {
-    return ("<small>"+ "(" + nonusers + "% population)" + "</small>")
-  }
-
-
-}
-
-
-function update_legend(selection, pos,text){
-
-  var selector = "rect[id='"+text+"']"
-  var selector2 = "text[id='"+text+"s"+"']"
-
-      selection
-          .select(selector)
-            .attr("y",function(d){return margin.top + 60*pos});
-      selection
-          .select(selector2)
-          .attr("y",function(d){return margin.top + 60*pos});
-
-}
-function draw_legend(selection, pos,text, margin){
-
-
-      selection
-          .append('rect')
-            .attr('id',text)
-            .attr("width", "20")
-            .attr("height", "20")
-            .attr("x", margin.left)
-            .attr("y",function(d){return margin.top + 60*pos})
-            .attr("fill", color(text));
-      selection
-          .append("text")
-          .attr('id',text+"s")
-          .attr("x", margin.left)
-          .attr("y",function(d){return margin.top + 60*pos})
-          .attr("dy", y_padding + "px")
-          .attr("dx", 15*x_padding + "px")
-          .text(text);
-
-}
-
-
-function fit_text(selection,scale){
-
-  selection
-    .text( function(d){
-
-      var iso = String(d.parent.parent.parent.data.key).toUpperCase()
-      var fullname = String(d.parent.parent.data.key)
-
-
-      if((getTextWidth(fullname,15,"arial") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"arial") < (((d.y1 - d.y0)-y_padding)/scale))) {
-
-        return(fullname)
-
-      }else if((getTextWidth(iso,15,"arial") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"arial") < (((d.y1 - d.y0)-y_padding)/scale))){
-
-
-        return(iso)
-
-      }else if((getTextWidth(iso,9,"arial") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",9,"arial") < (((d.y1 - d.y0)-y_padding)/scale))){
-
-        return(iso)
-
-      }
-    })
-
-    .attr("font-size",function(d){
-
-      var iso = String(d.parent.parent.parent.data.key).toUpperCase()
-
-        if((getTextWidth(iso,15,"arial") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("l",15,"arial") < (((d.y1 - d.y0)-y_padding)/scale))){
-
-          return("15px")
-        }  else{
-          return("9px")
-        }
-
-      });
-
-
-}
-
-function fit_value(selection,scale){
-
-  selection
-    .text( function(d){
-
-      var text = String(format(d.value/1000000))+"M"
-
-      if((getTextWidth(text,15,"sans-serif") < (((d.x1 - d.x0)-x_padding)/scale)) && (getTextWidth("a",15,"sans-serif") < (((d.y1 - d.y0)-1.7*y_padding)/scale))) {
-
-        return(text)
-
-      }
-    })
-
-}
-
-function accumulate(d) {
-  return d.children
-  ? d.value = d.children.reduce(function(p, v) { return p + accumulate(v); }, 0)
-  : d.value;
-  }
-
-function getTextWidth(text, fontSize, fontFace) {
-    var a = document.createElement('canvas');
-    var b = a.getContext('2d');
-    b.font = fontSize + 'px ' + fontFace;
-    return b.measureText(text).width;
-}
-
-function getTextHeigth(text, fontSize, fontFace) {
-    var a = document.createElement('canvas');
-    var b = a.getContext('2d');
-    b.font = fontSize + 'px ' + fontFace;
-    return b.measureText(text).heigth;
-}
 </script>
 
 <h2> Comments</h2>
 <p> The International Telecommunications Union (ITU, the United Nations  specialized agency for information and communication technologies) is the official source for global ICT statistics.</p>
 <p> ITU collects statistics on several ICT developments, being one of the most important indicators the one measuring "Internet users" (e.g. it is included in the Sustainable Development Goals' global indicator framework). ITU wants to draw attention to the population not yet connected by informing on questions such as: How many are they? Where are they? What is the situation today compared to five years ago?</p>
-<p>This chart is an (initial) proposal to visually present the data on non-Internet users and address the questions raised about them. Based on ITU's feedback and BGSE's (Michael Greenacre), further refinements will be made.</p>
-<p>The regional classification corresponds to that followed by ITU (UN M49). Colors have been chosen based on the Color Brewer qualitative palette that better matches <a href="http://www.itu.int/en/ITU-D/Pages/ITUAroundTheWorld.aspx">ITU's usual colors for regions</a>.</p>
-<p>The treemap proposed allows to visually see in which regions and countries most non-Internet users live. Indeed, from top to bottom and left to right, countries and regions are classified according to the absolute number of non-Internet users. The size of the treemap is proportional to the global number of non-Interent users in 2010. As a result, the animation shows graphically how the unconnected have decreased, plus changes in relative rankings within regions. For instance, Brazil was the country with most non-Internet users in the Americas in 2010, whereas in 2015 the United States was home to the largest number of non-Internet users.</p>
-<p>The labels of each cell have been customized in order to appear only when there is enough space (to avoid overcrowding). Nevertheless, the user can explore the whole data set by moving the cursor across the treemap and the underlying data for each country is displayed in a tooltip.</p>
+<p>This chart is an initial proposal to visually present the data on non-Internet users and address the questions raised about them. The regional classification corresponds to that followed by ITU (UN M49). Colors have been chosen based on the Color Brewer qualitative palette that better matches <a href="http://www.itu.int/en/ITU-D/Pages/ITUAroundTheWorld.aspx">ITU's usual colors for regions</a>.</p>
+<p>The treemap proposed allows to visually see in which regions and countries most non-Internet users live. Indeed, from top to bottom and left to right, countries and regions are classified according to the absolute number of non-Internet users. The size of the treemap is proportional to the global number of non-Interent users in 2010. As a result, the animation shows graphically how the unconnected have decreased, plus changes in relative rankings within regions. For instance, Brazil was the country with most non-Internet users in the Americas in 2010, whereas in 2015 the United States was home to the largest number of non-Internet users in the region.</p>
+<p> The map allows to zoom into different regions in order to see in more detail the distribution of non-Interent users within each region. Moreover, it is possible to see the evolution from one year to another for a specific region. The treemap of each region is sized proportionally to the number of non-Internet users in the region in 2010. Therefore, the animation shows how non-Internet users have decreased from 2010 to 2015 or, going backwards in time, how they increased from 2015 to 2010, in each region.</p>
+<p>The labels of each cell have been customized in order to appear only when there is enough space (to avoid overcrowding). Nevertheless, the user can explore the whole data set by moving the cursor on the treemap. Indeed,  the underlying data for each country is displayed in a tooltip. The tooltips for 2015 incorporate additional information on the increase or decrease of non-Internet users in the period 2010-2015.</p>
 
 <p> The d3.js code and the underlying data (csv format) are available at my <a href="https://github.com/ivan-vallejo/Data_Visualization">GitHub account</a>. </p>
 </body>
+</html>
