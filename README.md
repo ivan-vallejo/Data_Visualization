@@ -1,7 +1,7 @@
 # Data visualization
 ## Project for the Barcelona Graduate School of Economics based on data from the International Telecommunication Union on Internet users worldwide
 
-### <a href="https://ivan-vallejo.github.io/Data_Visualization/">https://ivan-vallejo.github.io/Data_Visualization/</a> (better seen in Chrome) 
+### <a href="https://ivan-vallejo.github.io/Data_Visualization/">https://ivan-vallejo.github.io/Data_Visualization/</a> <small> (better seen in Chrome) </small>
 
 <p> ITU collects statistics on several ICT developments, being one of the most important indicators the one measuring "Internet users" (e.g. it is included in the Sustainable Development Goals' global indicator framework). ITU wants to draw attention to the population not yet connected by informing on questions such as: How many are they? Where are they? What is the situation today compared to five years ago?</p>
 <p>This chart is an initial proposal to visually present the data on non-Internet users and address the questions raised about them. The regional classification corresponds to that followed by ITU (UN M49). Colors have been chosen based on the Color Brewer qualitative palette that better matches <a href="http://www.itu.int/en/ITU-D/Pages/ITUAroundTheWorld.aspx">ITU's usual colors for regions</a>.</p>
